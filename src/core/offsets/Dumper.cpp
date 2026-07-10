@@ -69,6 +69,10 @@ bool Dumper::InitImpl() {
     offsets::weaponC4 = temp - client.base;
     LOGF(VERBOSE, "Found 'weaponC4 carrier' offset at 0x{:X}", offsets::weaponC4);
 
+    // dwViewAngles - hardcoded from dumper
+    offsets::dwViewAngles = 0x23B8C68;
+    LOGF(VERBOSE, "Set 'dwViewAngles' offset at 0x{:X}", offsets::dwViewAngles);
+
 #if 0
     // Local Player Pawn (tbh idk how to read it :1)
     if (temp = Scan(offsets::signatures::localPlayerPawn, client); !temp) {

@@ -6,6 +6,7 @@
 #include "gui/frontend/menu/Menu.hpp"
 #include "gui\frontend\overlays\Overlays.hpp"
 #include "core\scripting\Scripting.hpp"
+#include "core\features\Features.hpp"
 
 bool Renderer::Init() {
     return GetInstance().InitImpl();
@@ -87,8 +88,12 @@ void Renderer::ThreadImpl() {
 void Renderer::Render() {
     Window::StartRender();
 
-    Esp::Render();
-    Overlays::Render();
+    // ESP rendering disabled - only menu for P2C config
+    // Esp::Render();  // DISABLED
+    // Overlays::Render();  // DISABLED
+    
+    // Draw P2C overlays (FOV circle, etc.)
+    Features::DrawOverlays();
 
     Menu::RenderStartupHelp();
     if (isOpen) Menu::Render();
@@ -99,6 +104,9 @@ void Renderer::Render() {
 bool Renderer::HandleState() {
     isRunning = Window::shouldRun; // From the window event handler
     scripting::Scripting::Get().Update();
+    
+    // Run P2C features every frame
+    Features::Run();
 
     static bool was_holding = false;
 

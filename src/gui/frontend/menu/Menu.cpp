@@ -45,9 +45,9 @@ void Menu::RenderImpl() {
 	static auto color_flags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_None;
 
 #ifdef _DEBUG
-	static auto title = "github.com/IMXNOOBX/cs2-external-esp (recode) [DEV]";
+	static auto title = "cs2-external-danger - P2C Config [DEV]";
 #else
-	static auto title = "cs2-external-esp | recode";
+	static auto title = "cs2-external-danger | P2C Config";
 #endif
 
 	ImGui::SetNextWindowSize(ImVec2(600, 370), ImGuiCond_FirstUseEver);
@@ -109,191 +109,119 @@ void Menu::RenderImpl() {
 			{
 				if (active_tab == Tab::PLAYER)
 				{
-					ImGui::Text("Visuals");
+					ImGui::Text("Aimbot");
 					ImGui::Separator();
 
-					ImGui::BeginGroup();
+					ImGui::Checkbox("Enable Aimbot", &cfg::aimbot::enabled);
+					ImGui::BeginDisabled(!cfg::aimbot::enabled);
 					{
-						ImGui::Checkbox("Box", &cfg::esp::box);
-						ImGui::BeginDisabled(!cfg::esp::box);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team box color", cfg::esp::colors::box_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy box color", cfg::esp::colors::box_enemy.data(), color_flags);
-						}
+						ImGui::Checkbox("Always On (Inverted)", &cfg::aimbot::always_on);
+						ImGui::SetItemTooltip("If checked, aimbot is ON by default and OFF when key is held");
+						
+						ImGui::SliderFloat("FOV", &cfg::aimbot::fov, 1.0f, 20.0f, "%.1f");
+						ImGui::SetItemTooltip("Field of view in screen space");
+						
+						ImGui::SliderFloat("Smooth", &cfg::aimbot::smooth, 1.0f, 10.0f, "%.1f");
+						ImGui::SetItemTooltip("Higher value = smoother/slower aim movement");
+						
+						ImGui::Checkbox("Visible Only", &cfg::aimbot::visible_only);
+						ImGui::SetItemTooltip("Only target enemies that are visible/spotted");
+						
+						ImGui::Checkbox("Multibone Targeting", &cfg::aimbot::multibone);
+						ImGui::SetItemTooltip("Try multiple bones instead of just head");
+						
+						ImGui::BeginDisabled(!cfg::aimbot::multibone);
+						ImGui::Checkbox("  Closest Bone Mode", &cfg::aimbot::multibone_closest);
+						ImGui::SetItemTooltip("If ON: aim at whichever bone is closest to crosshair.\nIf OFF: use priority (head -> neck -> chest)");
 						ImGui::EndDisabled();
-
-						ImGui::Checkbox("Skeleton", &cfg::esp::skeleton);
-						ImGui::BeginDisabled(!cfg::esp::skeleton);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team skeleton color", cfg::esp::colors::skeleton_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy skeleton color", cfg::esp::colors::skeleton_enemy.data(), color_flags);
-						}
+						
+						ImGui::Checkbox("Velocity Compensation", &cfg::aimbot::velocity_comp);
+						ImGui::BeginDisabled(!cfg::aimbot::velocity_comp);
+						ImGui::SliderFloat("Velocity Scale", &cfg::aimbot::velocity_comp_scale, 0.0f, 0.1f, "%.3f");
+						ImGui::SetItemTooltip("How much to compensate for target movement");
 						ImGui::EndDisabled();
-
-						ImGui::Checkbox("Head Tracker", &cfg::esp::head_tracker);
-						ImGui::BeginDisabled(!cfg::esp::head_tracker);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team head tracker color", cfg::esp::colors::tracker_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy head tracker color", cfg::esp::colors::tracker_enemy.data(), color_flags);
+						
+						ImGui::Checkbox("RCS Integration", &cfg::aimbot::rcs);
+						ImGui::SetItemTooltip("Use standalone RCS feature for recoil control");
+						
+						ImGui::Text("Aimbot Key:");
+						ImGui::SameLine();
+						const char* aimbot_keys[] = { "Mouse 4 (VK_XBUTTON1)", "Mouse 5 (VK_XBUTTON2)", "Left Alt", "Left Shift" };
+						int aimbot_key_index = (cfg::aimbot::hotkey == VK_XBUTTON1) ? 0 : (cfg::aimbot::hotkey == VK_XBUTTON2) ? 1 : (cfg::aimbot::hotkey == VK_MENU) ? 2 : 3;
+						if (ImGui::Combo("##aimbotkey", &aimbot_key_index, aimbot_keys, IM_ARRAYSIZE(aimbot_keys))) {
+							cfg::aimbot::hotkey = (aimbot_key_index == 0) ? VK_XBUTTON1 : (aimbot_key_index == 1) ? VK_XBUTTON2 : (aimbot_key_index == 2) ? VK_MENU : VK_LSHIFT;
 						}
-						ImGui::EndDisabled();
-
-						ImGui::Checkbox("Tracers", &cfg::esp::tracers);
-						ImGui::BeginDisabled(!cfg::esp::tracers);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team tracer color", cfg::esp::colors::tracer_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy tracer color", cfg::esp::colors::tracer_enemy.data(), color_flags);
-						}
-						ImGui::EndDisabled();
 					}
-					ImGui::EndGroup();
+					ImGui::EndDisabled();
 
-					ImGui::SameLine();
-
-					ImGui::BeginGroup();
-					{
-						ImGui::Checkbox("Health", &cfg::esp::health);
-						if (cfg::esp::health)
-							ImGui::Checkbox("Health Number", &cfg::esp::health_number);
-						ImGui::Checkbox("Armor", &cfg::esp::armor);
-
-						ImGui::Checkbox("Spotted", &cfg::esp::spotted);
-						ImGui::SetItemTooltip("Esp will only be visible if the player has been spotted by you");
-
-						ImGui::Checkbox("Show Team", &cfg::esp::team);
-					}
-					ImGui::EndGroup();
-
-					//ImGui::SameLine();
 					ImGui::Spacing();
-
-					ImGui::Text("Flags");
+					ImGui::Text("Triggerbot");
 					ImGui::Separator();
 
-					ImGui::BeginGroup();
+					ImGui::Checkbox("Enable Triggerbot", &cfg::triggerbot::enabled);
+					ImGui::BeginDisabled(!cfg::triggerbot::enabled);
 					{
-						ImGui::Checkbox("Flashed", &cfg::esp::flags::flashed);
-						ImGui::BeginDisabled(!cfg::esp::flags::flashed);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team flashed color", cfg::esp::colors::flags::flashed_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy flashed color", cfg::esp::colors::flags::flashed_enemy.data(), color_flags);
+						ImGui::Checkbox("Target Team##trig", &cfg::triggerbot::team);
+						ImGui::SliderInt("Delay (ms)", &cfg::triggerbot::delay, 0, 200);
+						ImGui::Checkbox("Only in Crosshair", &cfg::triggerbot::only_in_crosshair);
+						
+						ImGui::Text("Triggerbot Key:");
+						ImGui::SameLine();
+						const char* trigger_keys[] = { "Mouse 4 (VK_XBUTTON1)", "Mouse 5 (VK_XBUTTON2)", "Left Alt", "Left Shift" };
+						int trigger_key_index = (cfg::triggerbot::key == VK_XBUTTON1) ? 0 : (cfg::triggerbot::key == VK_XBUTTON2) ? 1 : (cfg::triggerbot::key == VK_MENU) ? 2 : 3;
+						if (ImGui::Combo("##triggerbotkey", &trigger_key_index, trigger_keys, IM_ARRAYSIZE(trigger_keys))) {
+							cfg::triggerbot::key = (trigger_key_index == 0) ? VK_XBUTTON1 : (trigger_key_index == 1) ? VK_XBUTTON2 : (trigger_key_index == 2) ? VK_MENU : VK_LSHIFT;
 						}
-						ImGui::EndDisabled();
-
-						ImGui::Checkbox("Reloading", &cfg::esp::flags::reloading);
-						ImGui::BeginDisabled(!cfg::esp::flags::reloading);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team reloading color", cfg::esp::colors::flags::reloading_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy reloading color", cfg::esp::colors::flags::reloading_enemy.data(), color_flags);
-						}
-						ImGui::EndDisabled();
-
-						ImGui::Checkbox("Defusing", &cfg::esp::flags::defusing);
-						ImGui::BeginDisabled(!cfg::esp::flags::defusing);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team defusing color", cfg::esp::colors::flags::defusing_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy defusing color", cfg::esp::colors::flags::defusing_enemy.data(), color_flags);
-						}
-						ImGui::EndDisabled();
-
-						ImGui::Checkbox("Scoped", &cfg::esp::flags::scoped);
-						ImGui::BeginDisabled(!cfg::esp::flags::scoped);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team scoped color", cfg::esp::colors::flags::scoped_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy scoped color", cfg::esp::colors::flags::scoped_enemy.data(), color_flags);
-						}
-						ImGui::EndDisabled();
-
-						ImGui::Checkbox("Has C4", &cfg::esp::flags::has_c4);
-						ImGui::BeginDisabled(!cfg::esp::flags::has_c4);
-						{
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Team C4 color", cfg::esp::colors::flags::c4_team.data(), color_flags);
-							ImGui::SameLine();
-							ImGui::ColorEdit4("Enemy C4 color", cfg::esp::colors::flags::c4_enemy.data(), color_flags);
-						}
-						ImGui::EndDisabled();
 					}
-					ImGui::EndGroup();
+					ImGui::EndDisabled();
 
-					ImGui::SameLine();
+					ImGui::Spacing();
+					ImGui::Text("Anti-Flash");
+					ImGui::Separator();
 
-					ImGui::BeginGroup();
+					ImGui::Checkbox("Enable Anti-Flash", &cfg::antiflash::enabled);
+					ImGui::BeginDisabled(!cfg::antiflash::enabled);
 					{
-						ImGui::Checkbox("Name", &cfg::esp::flags::name);
-						ImGui::Checkbox("Money", &cfg::esp::flags::money);
-						ImGui::Checkbox("Weapon", &cfg::esp::flags::weapon);
-						ImGui::Checkbox("Ammo", &cfg::esp::flags::ammo);
-						ImGui::Checkbox("Ping", &cfg::esp::flags::ping);
+						ImGui::SliderFloat("Flash Opacity", &cfg::antiflash::opacity, 0.0f, 1.0f, "%.2f");
+						ImGui::SetItemTooltip("0.0 = no flash, 1.0 = full flash");
+						ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Note: Requires game offset to work");
 					}
-					ImGui::EndGroup();
+					ImGui::EndDisabled();
+
+					ImGui::Spacing();
+					ImGui::Text("Recoil Control (RCS)");
+					ImGui::Separator();
+
+					ImGui::Checkbox("Enable RCS", &cfg::rcs::enabled);
+					ImGui::BeginDisabled(!cfg::rcs::enabled);
+					{
+						ImGui::SliderFloat("Horizontal", &cfg::rcs::horizontal, 0.0f, 2.0f, "%.2f");
+						ImGui::SliderFloat("Vertical", &cfg::rcs::vertical, 0.0f, 2.0f, "%.2f");
+						ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Note: Requires game offset to work");
+					}
+					ImGui::EndDisabled();
 				}
 				else if (active_tab == Tab::WORLD)
 				{
-					ImGui::Text("Bomb");
+					ImGui::Text("P2C Features Status");
 					ImGui::Separator();
-					{
-						ImGui::Checkbox("Bomb ESP", &cfg::esp::bomb);
-						ImGui::SameLine();
-						ImGui::ColorEdit4("Bomb color", cfg::esp::bomb_color.data(), color_flags);
-					}
-					ImGui::Checkbox("Bomb Location", &cfg::world::bomb::location);
-					ImGui::Checkbox("Bomb Timer", &cfg::world::bomb::timer);
-
+					
+					ImGui::Text("Aimbot: %s", cfg::aimbot::enabled ? "ENABLED" : "DISABLED");
+					ImGui::Text("Triggerbot: %s", cfg::triggerbot::enabled ? "ENABLED" : "DISABLED");
+					ImGui::Text("Anti-Flash: %s", cfg::antiflash::enabled ? "ENABLED" : "DISABLED");
+					ImGui::Text("RCS: %s", cfg::rcs::enabled ? "ENABLED" : "DISABLED");
+					
 					ImGui::Spacing();
-
-					ImGui::Text("Spectator list");
+					ImGui::Text("Info");
 					ImGui::Separator();
-
-					ImGui::Checkbox("Enable", &cfg::world::spectators::enabled);
-					if (cfg::world::spectators::enabled) {
-						ImGui::Checkbox("Detailed", &cfg::world::spectators::detailed);
-						ImGui::Checkbox("Only Self", &cfg::world::spectators::self_only);
-						ImGui::SetItemTooltip("Only display users spectating you");
-					}
-
+					
+					ImGui::TextWrapped("This is the P2C (Paste-to-Cheat) version with no ESP rendering.");
+					ImGui::TextWrapped("Configure all features in the first tab.");
+					ImGui::TextWrapped("Hold your configured keys to activate aimbot/triggerbot.");
+					
 					ImGui::Spacing();
-
-					ImGui::Text("Misc");
-					ImGui::Separator();
-
-					ImGui::Checkbox("Crosshair", &cfg::world::crosshair::enabled);
-					ImGui::Checkbox("Velocity Graph", &cfg::world::velocity::enabled);
-				#ifdef _DEBUG // Part of the velocity graph for developers
-					if (cfg::world::velocity::enabled) {
-						ImGui::SliderInt("Sample rate", &cfg::world::velocity::sample_rate, 1, 100);
-						ImGui::SliderFloat("Sample length", &cfg::world::velocity::sample_length, 1, 20, "%.1f");
-					}
-				#endif
-					ImGui::Spacing();
-
-					ImGui::Text("Radar");
-					ImGui::Separator();
-
-					ImGui::Checkbox("Radar", &cfg::world::radar::enabled);
-					ImGui::BeginDisabled(!cfg::world::radar::enabled);
-					{
-						ImGui::SameLine();
-						ImGui::SliderFloat("Range", &cfg::world::radar::range, 100.f, 8000.f, "%.0f u");
-						ImGui::Checkbox("Disable Rotation", &cfg::world::radar::no_rotate);
-					}
-					ImGui::EndDisabled();
+					ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Note:");
+					ImGui::TextWrapped("Anti-Flash and RCS require game memory offsets to function properly.");
 				}
 				else if (active_tab == Tab::SETTINGS)
 				{

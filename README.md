@@ -1,6 +1,6 @@
-# 🕹️ CS2 External ESP | Recode
+# 🎯 CS2 External Danger | P2C
 
-Simple external ESP for Counter-Strike 2. After years of development the codebase has been modernized for clarity and ease of use, featuring a redesigned interface, noticeable performance improvements, several quality-of-life additions, and automatic offset scanning to help maintain compatibility through game updates.
+External paste-to-cheat (P2C) for Counter-Strike 2 focused on combat features. This version has been stripped of all rendering/ESP functionality and focuses exclusively on aimbot, triggerbot, anti-flash, and recoil control features. It can run simultaneously with the ESP version without conflicts.
 
 - This project is mirrored in the following locations.
   - **GitHub**: [*github.com/IMXNOOBX/cs2-external-esp*](https://github.com/IMXNOOBX/cs2-external-esp) (main)

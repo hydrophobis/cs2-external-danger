@@ -60,6 +60,17 @@ bool Player::GetPawn() {
 
 	this->pawn = p->read<uintptr_t>(entity_pawn_list_entry + 0x70 * (entity_pawn_address & 0x1FF)); /*0x78*/
 
+	this->pawn_addr = this->pawn; // Store for features like RCS
+	
+	// Debug log for local player only
+	if (this->localplayer) {
+		static bool logged = false;
+		if (!logged && this->pawn_addr != 0) {
+			LOGF(INFO, "Local player pawn_addr set to: 0x%llX", this->pawn_addr);
+			logged = true;
+		}
+	}
+
 	return this->pawn != 0;
 }
 
@@ -113,8 +124,19 @@ bool Player::UpdatePawn() {
 	this->armor = p->read<int>(pawn + offsets::pawn::m_ArmorValue);
 	this->defusing = p->read<bool>(pawn + offsets::pawn::m_bIsDefusing);
 	this->spotted = p->read<bool>(pawn + offsets::pawn::m_entitySpottedState + offsets::pawn::m_bSpottedByMask);
+	this->visible = this->spotted; // For aimbot
 	this->flashed = p->read<float>(pawn + offsets::pawn::m_flFlashOverlayAlpha) > 0;
 	this->scoped = p->read<bool>(pawn + offsets::pawn::m_bIsScoped);
+
+	this->shotsFired = p->read<int32_t>(pawn + offsets::pawn::m_iShotsFired);
+
+	if (this->localplayer) {
+		uintptr_t aim_punch_service = p->read<uintptr_t>(pawn + offsets::pawn::m_pAimPunchServices);
+		if (aim_punch_service) {
+			Vec3_t punch3d = p->read<Vec3_t>(aim_punch_service + offsets::pawn::m_predictableBaseAngle);
+			this->aimPunch = Vec2_t{ punch3d.x, punch3d.y };
+		}
+	}
 
 	if (!UpdateSkeleton()) {
 		LOGF(FATAL, "Failed to update skeleton");

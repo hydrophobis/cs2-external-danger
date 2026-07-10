@@ -27,6 +27,34 @@ namespace scripting {
 
     void Scripting::RegisterConfigVars() {
         config_map["enabled"] = &cfg::enabled;
+        
+        // P2C Features
+        config_map["aimbot.enabled"] = &cfg::aimbot::enabled;
+        config_map["aimbot.hotkey"] = &cfg::aimbot::hotkey;
+        config_map["aimbot.always_on"] = &cfg::aimbot::always_on;
+        config_map["aimbot.fov"] = &cfg::aimbot::fov;
+        config_map["aimbot.smooth"] = &cfg::aimbot::smooth;
+        config_map["aimbot.visible_only"] = &cfg::aimbot::visible_only;
+        config_map["aimbot.velocity_comp"] = &cfg::aimbot::velocity_comp;
+        config_map["aimbot.velocity_comp_scale"] = &cfg::aimbot::velocity_comp_scale;
+        config_map["aimbot.rcs"] = &cfg::aimbot::rcs;
+        config_map["aimbot.multibone"] = &cfg::aimbot::multibone;
+        config_map["aimbot.multibone_closest"] = &cfg::aimbot::multibone_closest;
+        
+        config_map["triggerbot.enabled"] = &cfg::triggerbot::enabled;
+        config_map["triggerbot.team"] = &cfg::triggerbot::team;
+        config_map["triggerbot.key"] = &cfg::triggerbot::key;
+        config_map["triggerbot.delay"] = &cfg::triggerbot::delay;
+        config_map["triggerbot.only_in_crosshair"] = &cfg::triggerbot::only_in_crosshair;
+        
+        config_map["rcs.enabled"] = &cfg::rcs::enabled;
+        config_map["rcs.horizontal"] = &cfg::rcs::horizontal;
+        config_map["rcs.vertical"] = &cfg::rcs::vertical;
+        
+        config_map["antiflash.enabled"] = &cfg::antiflash::enabled;
+        config_map["antiflash.opacity"] = &cfg::antiflash::opacity;
+        
+        // ESP Features (Original)
         config_map["esp.team"] = &cfg::esp::team;
         config_map["esp.box"] = &cfg::esp::box;
         config_map["esp.armor"] = &cfg::esp::armor;

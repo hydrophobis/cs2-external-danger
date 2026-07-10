@@ -16,8 +16,10 @@ public:
 
     Vec3_t pos;
     Vec3_t vel;
-
+    Vec2_t aimPunch;
+    
     int ping = 0;
+    int32_t shotsFired = 0;
     int team = 0;
     int health = 0;
     int armor = 0;
@@ -28,6 +30,7 @@ public:
     bool scoped = false;
     bool flashed = false;
     bool spotted = false;
+    bool visible = false;
     bool defusing = false;
     bool localplayer = false;
     bool has_c4 = false;
@@ -42,7 +45,8 @@ public:
 
     std::vector<bone_pos> bone_list;
 
-    int pawn_controller_addr;
+    int pawn_controller_addr = 0;
+    uintptr_t pawn_addr = 0;
     ObserverServices observer_services;
 private:
     uintptr_t list_entry;

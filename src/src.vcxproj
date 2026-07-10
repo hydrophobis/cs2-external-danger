@@ -24,7 +24,7 @@
     <ProjectGuid>{394ef5ce-9a9a-41ed-9287-2758ae0a5412}</ProjectGuid>
     <RootNamespace>src</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>cs2-external-esp</ProjectName>
+    <ProjectName>cs2-external-danger</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -212,6 +212,11 @@
     <ClCompile Include="gui\frontend\theme\Theme.cpp" />
     <ClCompile Include="gui\renderer\Renderer.cpp" />
     <ClCompile Include="gui\renderer\window\Window.cpp" />
+    <ClCompile Include="core\features\Aimbot.cpp" />
+    <ClCompile Include="core\features\Triggerbot.cpp" />
+    <ClCompile Include="core\features\AntiFlash.cpp" />
+    <ClCompile Include="core\features\RCS.cpp" />
+    <ClCompile Include="core\features\Features.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="updater\http\HttpHelper.cpp" />
     <ClCompile Include="updater\Updater.cpp" />
@@ -250,14 +255,7 @@
     <ClInclude Include="external\AsyncLogger\src\LogMessage.hpp" />
     <ClInclude Include="external\AsyncLogger\src\LogStream.hpp" />
     <ClInclude Include="external\exception.hpp" />
-    <ClInclude Include="external\imgui\backends\imgui_impl_dx11.h" />
-    <ClInclude Include="external\imgui\backends\imgui_impl_win32.h" />
-    <ClInclude Include="external\imgui\imconfig.h" />
-    <ClInclude Include="external\imgui\imgui.h" />
-    <ClInclude Include="external\imgui\imgui_internal.h" />
-    <ClInclude Include="external\imgui\imstb_rectpack.h" />
-    <ClInclude Include="external\imgui\imstb_textedit.h" />
-    <ClInclude Include="external\imgui\imstb_truetype.h" />
+
     <ClInclude Include="external\json\include\nlohmann\adl_serializer.hpp" />
     <ClInclude Include="external\json\include\nlohmann\byte_container_with_subtype.hpp" />
     <ClInclude Include="external\json\include\nlohmann\detail\abi_macros.hpp" />
@@ -305,12 +303,25 @@
     <ClInclude Include="external\json\include\nlohmann\thirdparty\hedley\hedley.hpp" />
     <ClInclude Include="external\json\include\nlohmann\thirdparty\hedley\hedley_undef.hpp" />
     <ClInclude Include="external\timer\timer.hpp" />
+    <ClInclude Include="external\imgui\backends\imgui_impl_dx11.h" />
+    <ClInclude Include="external\imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="external\imgui\imconfig.h" />
+    <ClInclude Include="external\imgui\imgui.h" />
+    <ClInclude Include="external\imgui\imgui_internal.h" />
+    <ClInclude Include="external\imgui\imstb_rectpack.h" />
+    <ClInclude Include="external\imgui\imstb_textedit.h" />
+    <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="gui\frontend\esp\Esp.hpp" />
     <ClInclude Include="gui\frontend\menu\Menu.hpp" />
     <ClInclude Include="gui\frontend\overlays\Overlays.hpp" />
     <ClInclude Include="gui\frontend\theme\Theme.hpp" />
     <ClInclude Include="gui\renderer\Renderer.hpp" />
     <ClInclude Include="gui\renderer\window\Window.hpp" />
+    <ClInclude Include="core\features\Aimbot.hpp" />
+    <ClInclude Include="core\features\Triggerbot.hpp" />
+    <ClInclude Include="core\features\AntiFlash.hpp" />
+    <ClInclude Include="core\features\RCS.hpp" />
+    <ClInclude Include="core\features\Features.hpp" />
     <ClInclude Include="updater\http\HttpHelper.hpp" />
     <ClInclude Include="updater\Updater.hpp" />
     <ClInclude Include="core\engine\classes\Weapon.hpp" />

@@ -7,6 +7,7 @@ namespace offsets
 	inline DWORD globalVars;
 	inline DWORD plantedC4;
 	inline DWORD weaponC4;
+	inline DWORD dwViewAngles;
 
 	// engine2.dll
 	inline DWORD buildNumber;
@@ -35,7 +36,20 @@ namespace offsets
 		constexpr std::ptrdiff_t m_entitySpottedState = 0x11B0; // EntitySpottedState_t
 		constexpr std::ptrdiff_t m_bSpottedByMask = 0xC; // uint32[2] - EntitySpottedState_t
 		
-		constexpr std::ptrdiff_t m_flFlashOverlayAlpha = 0x141C; // float32 - C_CSPlayerPawnBase 
+		constexpr std::ptrdiff_t m_flFlashOverlayAlpha = 0x141C;
+		constexpr std::ptrdiff_t m_flFlashMaxAlpha = 0x1420;
+		constexpr std::ptrdiff_t m_flFlashDuration = 0x1424;
+		
+		constexpr std::ptrdiff_t m_aimPunchAngle = 0x177C;
+		constexpr std::ptrdiff_t m_aimPunchAngleVel = 0x1788;
+		constexpr std::ptrdiff_t m_aimPunchCache = 0x1794;
+		constexpr std::ptrdiff_t m_iShotsFired = 0x1C84;
+		
+		constexpr std::ptrdiff_t m_pAimPunchServices = 0x14B8;
+		constexpr std::ptrdiff_t m_predictableBaseAngle = 0x50;
+		constexpr std::ptrdiff_t m_unpredictableBaseAngle = 0xA4;
+		
+		constexpr std::ptrdiff_t m_angEyeAngles = 0x1540;
 		
 		constexpr std::ptrdiff_t m_pWeaponServices = 0x1208; // CPlayer_WeaponServices*
 		constexpr std::ptrdiff_t m_hActiveWeapon = 0x60; // CHandle<C_BasePlayerWeapon> - CPlayer_WeaponServices

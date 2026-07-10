@@ -9,7 +9,7 @@ bool Config::Write() {
 }
 
 bool Config::ReadImpl() {
-	std::ifstream f("config.json");
+	std::ifstream f("danger_config.json");
 
 	if (!f.good()) {
 		LOGF(FATAL, "Configuration file does not exist, creating a new one");
@@ -34,100 +34,42 @@ bool Config::ReadImpl() {
 		// general
 		cfg::enabled = data.value("enabled", true);
 
-		// esp
-		cfg::esp::box = data["esp"].value("box", true);
-		cfg::esp::team = data["esp"].value("team", true);
-		cfg::esp::armor = data["esp"].value("armor", true);
-		cfg::esp::health = data["esp"].value("health", true);
-		cfg::esp::spotted = data["esp"].value("spotted", false);
-		cfg::esp::bomb = data["esp"].value("bomb", true);
-		cfg::esp::bomb_color = JsonToColor(data["esp"], "bomb_color", { 1.f, 0.84f, 0.f, 1.f });	
-		cfg::esp::skeleton = data["esp"].value("skeleton", true);
-		cfg::esp::head_tracker = data["esp"].value("head_tracker", true);
-		cfg::esp::health_number = data["esp"].value("health_number", false);
-		cfg::esp::tracers = data["esp"].value("tracers", false);
+		// aimbot
+		const auto& aim = data["aimbot"];
+		cfg::aimbot::enabled = aim.value("enabled", true);
+		cfg::aimbot::hotkey = aim.value("hotkey", VK_XBUTTON2);
+		cfg::aimbot::always_on = aim.value("always_on", false);
+		cfg::aimbot::fov = aim.value("fov", 5.0f);
+		cfg::aimbot::smooth = aim.value("smooth", 3.0f);
+		cfg::aimbot::visible_only = aim.value("visible_only", true);
+		cfg::aimbot::velocity_comp = aim.value("velocity_comp", true);
+		cfg::aimbot::velocity_comp_scale = aim.value("velocity_comp_scale", 0.02f);
+		cfg::aimbot::rcs = aim.value("rcs", true);
+		cfg::aimbot::multibone = aim.value("multibone", true);
+		cfg::aimbot::multibone_closest = aim.value("multibone_closest", true);
 
-		// flags
-		cfg::esp::flags::name = data["esp"]["flags"].value("name", true);
-		cfg::esp::flags::ping = data["esp"]["flags"].value("ping", false);
-		cfg::esp::flags::money = data["esp"]["flags"].value("money", false);
-		cfg::esp::flags::weapon = data["esp"]["flags"].value("weapon", false);
-		cfg::esp::flags::ammo = data["esp"]["flags"].value("ammo", false);
-		cfg::esp::flags::reloading = data["esp"]["flags"].value("reloading", false);
-		cfg::esp::flags::scoped = data["esp"]["flags"].value("scoped", false);
-		cfg::esp::flags::defusing = data["esp"]["flags"].value("defusing", false);
-		cfg::esp::flags::flashed = data["esp"]["flags"].value("flashed", false);
-		cfg::esp::flags::has_c4 = data["esp"]["flags"].value("has_c4", false);
+		// triggerbot
+		const auto& trig = data["triggerbot"];
+		cfg::triggerbot::enabled = trig.value("enabled", false);
+		cfg::triggerbot::team = trig.value("team", false);
+		cfg::triggerbot::key = trig.value("key", VK_XBUTTON1);
+		cfg::triggerbot::delay = trig.value("delay", 50);
+		cfg::triggerbot::only_in_crosshair = trig.value("only_in_crosshair", true);
 
-		// colors
-		const auto& col = data["esp"]["colors"];
-		cfg::esp::colors::box_team = JsonToColor(col, "box_team", { 0.f, 1.f, 0.29f, 0.5f });
-		cfg::esp::colors::box_enemy = JsonToColor(col, "box_enemy", { 1.f, 0.f, 0.f, 0.5f });
+		// rcs
+		const auto& rcs = data["rcs"];
+		cfg::rcs::enabled = rcs.value("enabled", false);
+		cfg::rcs::horizontal = rcs.value("horizontal", 1.0f);
+		cfg::rcs::vertical = rcs.value("vertical", 1.0f);
 
-		cfg::esp::colors::skeleton_team = JsonToColor(col, "skeleton_team", { 0.f, 1.f, 0.f, 0.5f });
-		cfg::esp::colors::skeleton_enemy = JsonToColor(col, "skeleton_enemy", { 1.f, 0.f, 0.f, 0.5f });
+		// antiflash
+		const auto& flash = data["antiflash"];
+		cfg::antiflash::enabled = flash.value("enabled", true);
+		cfg::antiflash::opacity = flash.value("opacity", 0.0f);
 
-		cfg::esp::colors::tracker_team = JsonToColor(col, "tracker_team", { 1.f, 1.f, 1.f, 0.3f });
-		cfg::esp::colors::tracker_enemy = JsonToColor(col, "tracker_enemy", { 1.f, 1.f, 1.f, 0.3f });
-
-		cfg::esp::colors::tracer_team = JsonToColor(col, "tracer_team", { 0.f, 1.f, 0.f, 0.5f });
-		cfg::esp::colors::tracer_enemy = JsonToColor(col, "tracer_enemy", { 1.f, 0.f, 0.f, 0.5f });
-
-		// flag colors
-		const auto& fcol = data["esp"]["colors"]["flags"];
-
-		cfg::esp::colors::flags::flashed_team = JsonToColor(fcol, "flashed_team", { 1.f, 1.f, 1.f, 0.5f });
-		cfg::esp::colors::flags::flashed_enemy = JsonToColor(fcol, "flashed_enemy", { 1.f, 1.f, 1.f, 0.8f });
-
-		cfg::esp::colors::flags::reloading_team = JsonToColor(fcol, "reloading_team", { 1.f, 1.f, 1.f, 0.5f });
-		cfg::esp::colors::flags::reloading_enemy = JsonToColor(fcol, "reloading_enemy", { 1.f, 1.f, 1.f, 0.8f });
-
-		cfg::esp::colors::flags::defusing_team = JsonToColor(fcol, "defusing_team", { 1.f, 1.f, 1.f, 0.5f });
-		cfg::esp::colors::flags::defusing_enemy = JsonToColor(fcol, "defusing_enemy", { 1.f, 1.f, 1.f, 0.8f });
-
-		cfg::esp::colors::flags::scoped_team = JsonToColor(fcol, "scoped_team", { 1.f, 1.f, 1.f, 0.5f });
-		cfg::esp::colors::flags::scoped_enemy = JsonToColor(fcol, "scoped_enemy", { 1.f, 1.f, 1.f, 0.8f });
-
-		cfg::esp::colors::flags::c4_team = JsonToColor(fcol, "c4_team", { 1.f, 0.84f, 0.f, 1.f });
-		cfg::esp::colors::flags::c4_enemy = JsonToColor(fcol, "c4_enemy", { 1.f, 0.84f, 0.f, 1.f });
-
-		// world
-		// spectator list
-		cfg::world::spectators::enabled = data["world"]["spectators"].value("enabled", true);
-		cfg::world::spectators::detailed = data["world"]["spectators"].value("detailed", false);
-		cfg::world::spectators::self_only = data["world"]["spectators"].value("self_only", true);
-		cfg::world::spectators::pos = JsonToVec2(data["world"]["spectators"], "pos", {10.f, 100.f});
-
-		// bomb
-		cfg::world::bomb::location = data["world"]["bomb"].value("location", true);
-		cfg::world::bomb::timer = data["world"]["bomb"].value("timer", true);
-		cfg::world::bomb::hud = data["world"]["bomb"].value("hud", false);
-		cfg::world::bomb::pos = JsonToVec2(data["world"]["bomb"], "pos", { 10.f, 300.f });
-
-		// crosshair
-		cfg::world::crosshair::enabled = data["world"]["crosshair"].value("enabled", false); 
-
-		// radar
-		cfg::world::radar::enabled = data["world"]["radar"].value("enabled", true);
-		cfg::world::radar::no_rotate = data["world"]["radar"].value("no_rotate", false);
-		cfg::world::radar::range = data["world"]["radar"].value("range", 2000.f);
-		cfg::world::radar::pos = JsonToVec2(data["world"]["radar"], "pos", { 10.f, 10.f });
-		cfg::world::radar::size = JsonToVec2(data["world"]["radar"], "size", { 200.f, 200.f });
-
-		// velocity
-		cfg::world::velocity::enabled = data["world"]["velocity"].value("enabled", false);
-		cfg::world::velocity::sample_rate = data["world"]["velocity"].value("sample_rate", 10);
-		cfg::world::velocity::sample_length = data["world"]["velocity"].value("sample_length", 5.f);
-		cfg::world::velocity::pos = JsonToVec2(data["world"]["velocity"], "pos", { 10.f, 400.f });
-		cfg::world::velocity::size = JsonToVec2(data["world"]["velocity"], "size", { 400.f, 100.f });
-
-		// utils
-		//cfg::settings::console = data["utils"].value("console", true);
-		cfg::settings::watermark = data["utils"].value("watermark", true);
-		cfg::settings::streamproof = data["utils"].value("streamproof", false);
-		cfg::settings::vsync = data["utils"].value("vsync", true);
-		cfg::settings::free_cpu = data["utils"].value("free_cpu", true);
-		//cfg::settings::open_menu_key = data["utils"].value("open_menu_key", 0);
+		// settings
+		cfg::settings::free_cpu = data["settings"].value("free_cpu", true);
+		cfg::settings::update_rate = data["settings"].value("update_rate", 1);
 	}
 	catch (const std::exception& e) {
 		LOGF(FATAL, "Failed to parse configuration");
@@ -140,117 +82,53 @@ bool Config::ReadImpl() {
 }
 
 bool Config::WriteImpl() {
-	std::ofstream f("config.json");
+	std::ofstream f("danger_config.json");
 
 	json data;
 
 	data["enabled"] = cfg::enabled;
 
-	// esp
-	data["esp"]["box"] = cfg::esp::box;
-	data["esp"]["team"] = cfg::esp::team;
-	data["esp"]["armor"] = cfg::esp::armor;
-	data["esp"]["health"] = cfg::esp::health;
-	data["esp"]["health_number"] = cfg::esp::health_number;
-	data["esp"]["skeleton"] = cfg::esp::skeleton;
-	data["esp"]["head_tracker"] = cfg::esp::head_tracker;
-	data["esp"]["spotted"] = cfg::esp::spotted;
-	data["esp"]["bomb"] = cfg::esp::bomb;
-	ColorToJson(data["esp"], "bomb_color", cfg::esp::bomb_color);
-	data["esp"]["tracers"] = cfg::esp::tracers;
+	// aimbot
+	data["aimbot"]["enabled"] = cfg::aimbot::enabled;
+	data["aimbot"]["hotkey"] = cfg::aimbot::hotkey;
+	data["aimbot"]["always_on"] = cfg::aimbot::always_on;
+	data["aimbot"]["fov"] = cfg::aimbot::fov;
+	data["aimbot"]["smooth"] = cfg::aimbot::smooth;
+	data["aimbot"]["visible_only"] = cfg::aimbot::visible_only;
+	data["aimbot"]["velocity_comp"] = cfg::aimbot::velocity_comp;
+	data["aimbot"]["velocity_comp_scale"] = cfg::aimbot::velocity_comp_scale;
+	data["aimbot"]["rcs"] = cfg::aimbot::rcs;
+	data["aimbot"]["multibone"] = cfg::aimbot::multibone;
+	data["aimbot"]["multibone_closest"] = cfg::aimbot::multibone_closest;
 
-	// flags
-	data["esp"]["flags"]["name"] = cfg::esp::flags::name;
-	data["esp"]["flags"]["ping"] = cfg::esp::flags::ping;
-	data["esp"]["flags"]["money"] = cfg::esp::flags::money;
-	data["esp"]["flags"]["scoped"] = cfg::esp::flags::scoped;
-	data["esp"]["flags"]["weapon"] = cfg::esp::flags::weapon;
-	data["esp"]["flags"]["ammo"] = cfg::esp::flags::ammo;
-	data["esp"]["flags"]["reloading"] = cfg::esp::flags::reloading;
-	data["esp"]["flags"]["flashed"] = cfg::esp::flags::flashed;
-	data["esp"]["flags"]["defusing"] = cfg::esp::flags::defusing;
-	data["esp"]["flags"]["has_c4"] = cfg::esp::flags::has_c4;
+	// triggerbot
+	data["triggerbot"]["enabled"] = cfg::triggerbot::enabled;
+	data["triggerbot"]["team"] = cfg::triggerbot::team;
+	data["triggerbot"]["key"] = cfg::triggerbot::key;
+	data["triggerbot"]["delay"] = cfg::triggerbot::delay;
+	data["triggerbot"]["only_in_crosshair"] = cfg::triggerbot::only_in_crosshair;
 
-	// world
-	// spectator list
-	data["world"]["spectators"]["enabled"] = cfg::world::spectators::enabled;
-	data["world"]["spectators"]["detailed"] = cfg::world::spectators::detailed;
-	data["world"]["spectators"]["self_only"] = cfg::world::spectators::self_only;
-	Vec2ToJson(data["world"]["spectators"], "pos", cfg::world::spectators::pos);
+	// rcs
+	data["rcs"]["enabled"] = cfg::rcs::enabled;
+	data["rcs"]["horizontal"] = cfg::rcs::horizontal;
+	data["rcs"]["vertical"] = cfg::rcs::vertical;
 
-	// bomb
-	data["world"]["bomb"]["location"] = cfg::world::bomb::location;
-	data["world"]["bomb"]["timer"] = cfg::world::bomb::timer;
-		data["world"]["bomb"]["hud"] = cfg::world::bomb::hud;
-	Vec2ToJson(data["world"]["bomb"], "pos", cfg::world::bomb::pos);
+	// antiflash
+	data["antiflash"]["enabled"] = cfg::antiflash::enabled;
+	data["antiflash"]["opacity"] = cfg::antiflash::opacity;
 
-	// crosshair
-	data["world"]["crosshair"]["enabled"] = cfg::world::crosshair::enabled;
-
-	// radar
-	data["world"]["radar"]["enabled"] = cfg::world::radar::enabled;
-	data["world"]["radar"]["no_rotate"] = cfg::world::radar::no_rotate;
-	data["world"]["radar"]["range"] = cfg::world::radar::range;
-	Vec2ToJson(data["world"]["radar"], "pos", cfg::world::radar::pos);
-	Vec2ToJson(data["world"]["radar"], "size", cfg::world::radar::size);
-
-	// velocity
-	data["world"]["velocity"]["enabled"] = cfg::world::velocity::enabled;
-	data["world"]["velocity"]["sample_rate"] = cfg::world::velocity::sample_rate;
-	data["world"]["velocity"]["sample_length"] = cfg::world::velocity::sample_length;
-	Vec2ToJson(data["world"]["velocity"], "pos", cfg::world::velocity::pos);
-	Vec2ToJson(data["world"]["velocity"], "size", cfg::world::velocity::size);
-
-	// colors
-	auto& col = data["esp"]["colors"];
-	ColorToJson(col, "box_team", cfg::esp::colors::box_team);
-	ColorToJson(col, "box_enemy", cfg::esp::colors::box_enemy);
-
-	ColorToJson(col, "skeleton_team", cfg::esp::colors::skeleton_team);
-	ColorToJson(col, "skeleton_enemy", cfg::esp::colors::skeleton_enemy);
-
-	ColorToJson(col, "tracker_team", cfg::esp::colors::tracker_team);
-	ColorToJson(col, "tracker_enemy", cfg::esp::colors::tracker_enemy);
-
-	ColorToJson(col, "tracer_team", cfg::esp::colors::tracer_team);
-	ColorToJson(col, "tracer_enemy", cfg::esp::colors::tracer_enemy);
-
-	// flag colors
-	auto& fcol = col["flags"];
-
-	ColorToJson(fcol, "blinded_team", cfg::esp::colors::flags::flashed_team);
-	ColorToJson(fcol, "blinded_enemy", cfg::esp::colors::flags::flashed_enemy);
-
-	ColorToJson(fcol, "reloading_team", cfg::esp::colors::flags::reloading_team);
-	ColorToJson(fcol, "reloading_enemy", cfg::esp::colors::flags::reloading_enemy);
-
-	ColorToJson(fcol, "defusing_team", cfg::esp::colors::flags::defusing_team);
-	ColorToJson(fcol, "defusing_enemy", cfg::esp::colors::flags::defusing_enemy);
-
-	ColorToJson(fcol, "scoped_team", cfg::esp::colors::flags::scoped_team);
-	ColorToJson(fcol, "scoped_enemy", cfg::esp::colors::flags::scoped_enemy);
-
-	ColorToJson(fcol, "c4_team", cfg::esp::colors::flags::c4_team);
-	ColorToJson(fcol, "c4_enemy", cfg::esp::colors::flags::c4_enemy);
-
-	// utils
-	//data["utils"]["console"] = cfg::settings::console;
-	data["utils"]["watermark"] = cfg::settings::watermark;
-	data["utils"]["streamproof"] = cfg::settings::streamproof;
-	data["utils"]["vsync"] = cfg::settings::vsync;
-	data["utils"]["free_cpu"] = cfg::settings::free_cpu;
-	//data["utils"]["open_menu_key"] = cfg::settings::open_menu_key;
+	// settings
+	data["settings"]["free_cpu"] = cfg::settings::free_cpu;
+	data["settings"]["update_rate"] = cfg::settings::update_rate;
 
 	f << std::setw(4) << data << std::endl;
 	f.close();
 
-	LOGF(VERBOSE, "Writting configuration to file");
+	LOGF(VERBOSE, "Writing configuration to file");
 
 	return true;
 }
 
-
-// TODO: Refactor this
 color_t Config::JsonToColor(const json& parent, const std::string& key, const color_t& def) {
 	if (!parent.contains(key) || !parent[key].is_array() || parent[key].size() != 4)
 		return def;

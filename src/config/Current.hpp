@@ -1,8 +1,47 @@
 #pragma once
+#include <Windows.h>
 
 namespace cfg {
 	inline bool enabled = true;
 
+	// P2C Features
+	namespace aimbot {
+		inline bool enabled = true;
+		inline int hotkey = VK_XBUTTON2; // Mouse side button
+		inline bool always_on = false; // If true, aimbot is inverted (off when key held)
+		inline float fov = 5.0f; // FOV radius in screen space (multiplied by 10)
+		inline float smooth = 3.0f; // Higher = slower aim movement
+		inline bool visible_only = true; // Only target visible enemies
+		inline bool velocity_comp = true; // Compensate for target velocity
+		inline float velocity_comp_scale = 0.02f; // Velocity compensation scale
+		inline bool rcs = true; // Recoil control integrated into aimbot
+		
+		// Multibone targeting
+		inline bool multibone = true; // Try multiple bones
+		inline bool multibone_closest = true; // If true: aim at closest bone. If false: use priority order
+		inline int bone_priority[5] = { 7, 6, 5, 4, 2 }; // head, neck, upper_chest, chest, spine_1
+	}
+
+	namespace triggerbot {
+		inline bool enabled = false;
+		inline bool team = false;
+		inline int key = VK_XBUTTON1; // Mouse side button
+		inline int delay = 50; // ms
+		inline bool only_in_crosshair = true;
+	}
+
+	namespace rcs {
+		inline bool enabled = true; // RCS enabled by default
+		inline float horizontal = 1.0f; // 0.0 - 2.0
+		inline float vertical = 1.0f; // 0.0 - 2.0
+	}
+
+	namespace antiflash {
+		inline bool enabled = true;
+		inline float opacity = 0.0f; // 0.0 = no flash, 1.0 = full flash
+	}
+
+	// ESP Features (Original)
 	namespace esp {
 		inline bool team = true;
 
@@ -110,6 +149,7 @@ namespace cfg {
 		inline bool streamproof = false;
 		inline bool vsync = false;
 		inline bool free_cpu = true;
+		inline int update_rate = 1; // P2C update rate
 	}
 
 	// Not stored, just for testing
