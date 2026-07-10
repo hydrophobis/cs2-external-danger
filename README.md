@@ -1,5 +1,7 @@
 # 🎯 CS2 External Danger | P2C
 
+Designed so you can run the normal cheat for ESP features and this one for dangerous features
+
 External paste-to-cheat (P2C) for Counter-Strike 2 focused on combat features. This version has been stripped of all rendering/ESP functionality and focuses exclusively on aimbot, triggerbot, anti-flash, and recoil control features. It can run simultaneously with the ESP version without conflicts.
 
 - This project is mirrored in the following locations.
