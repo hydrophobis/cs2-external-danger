@@ -50,8 +50,8 @@ void Menu::RenderImpl() {
 	static auto title = "cs2-external-danger | P2C Config";
 #endif
 
-	ImGui::SetNextWindowSize(ImVec2(600, 370), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowPos(ImVec2(screen.x / 2 - 300, screen.y / 2 - 150), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(640, 520), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowPos(ImVec2(screen.x / 2 - 320, screen.y / 2 - 260), ImGuiCond_FirstUseEver);
 
 	ImGui::GetWindowPos();
 	if (ImGui::Begin(title, nullptr, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize)) {
@@ -118,11 +118,11 @@ void Menu::RenderImpl() {
 						ImGui::Checkbox("Always On (Inverted)", &cfg::aimbot::always_on);
 						ImGui::SetItemTooltip("If checked, aimbot is ON by default and OFF when key is held");
 						
-						ImGui::SliderFloat("FOV", &cfg::aimbot::fov, 1.0f, 20.0f, "%.1f");
-						ImGui::SetItemTooltip("Field of view in screen space");
+						ImGui::SliderFloat("FOV", &cfg::aimbot::fov, 1.0f, 40.0f, "%.1f");
+						ImGui::SetItemTooltip("Field of view radius (multiplied by 10 in screen space)");
 						
-						ImGui::SliderFloat("Smooth", &cfg::aimbot::smooth, 1.0f, 10.0f, "%.1f");
-						ImGui::SetItemTooltip("Higher value = smoother/slower aim movement");
+						ImGui::SliderFloat("Smooth", &cfg::aimbot::smooth, 1.0f, 15.0f, "%.1f");
+						ImGui::SetItemTooltip("Higher = slower, more human-like correction");
 						
 						ImGui::Checkbox("Visible Only", &cfg::aimbot::visible_only);
 						ImGui::SetItemTooltip("Only target enemies that are visible/spotted");
@@ -143,7 +143,7 @@ void Menu::RenderImpl() {
 						
 						ImGui::Checkbox("RCS Integration", &cfg::aimbot::rcs);
 						ImGui::SetItemTooltip("Use standalone RCS feature for recoil control");
-						
+
 						ImGui::Text("Aimbot Key:");
 						ImGui::SameLine();
 						const char* aimbot_keys[] = { "Mouse 4 (VK_XBUTTON1)", "Mouse 5 (VK_XBUTTON2)", "Left Alt", "Left Shift" };
@@ -151,6 +151,34 @@ void Menu::RenderImpl() {
 						if (ImGui::Combo("##aimbotkey", &aimbot_key_index, aimbot_keys, IM_ARRAYSIZE(aimbot_keys))) {
 							cfg::aimbot::hotkey = (aimbot_key_index == 0) ? VK_XBUTTON1 : (aimbot_key_index == 1) ? VK_XBUTTON2 : (aimbot_key_index == 2) ? VK_MENU : VK_LSHIFT;
 						}
+
+						ImGui::Spacing();
+						ImGui::Text("Humanization");
+						ImGui::Separator();
+
+						ImGui::Checkbox("Humanization", &cfg::aimbot::humanization);
+						ImGui::SetItemTooltip("Adds natural imperfections (reaction delay, aim error, jitter, occasional miss)");
+						ImGui::BeginDisabled(!cfg::aimbot::humanization);
+						{
+							ImGui::Checkbox("Aim Assist", &cfg::aimbot::aim_assist);
+							ImGui::SetItemTooltip("Lighter assist: skip the humanized flick curvature so the initial snap onto a target is more direct");
+
+							ImGui::SliderFloat("Reaction (ms)", &cfg::aimbot::reaction_time_ms, 50.f, 500.f, "%.0f");
+							ImGui::SetItemTooltip("Delay before the aimbot starts correcting onto a new target");
+
+							ImGui::SliderFloat("Aim Error (px)", &cfg::aimbot::aim_error_px, 0.f, 15.f, "%.1f");
+							ImGui::SetItemTooltip("Random offset so crosshair doesn't land dead-centre every time");
+
+							ImGui::SliderFloat("Tracking Jitter", &cfg::aimbot::tracking_jitter, 0.f, 3.f, "%.1f");
+							ImGui::SetItemTooltip("Micro-wobble during tracking to feel like a real hand");
+
+							ImGui::SliderFloat("Miss Chance", &cfg::aimbot::miss_chance, 0.f, 0.5f, "%.2f");
+							ImGui::SetItemTooltip("Probability of deliberately pulling the shot off target (0 = never, 0.5 = 50%)");
+
+							ImGui::SliderFloat("Flick Overshoot (px)", &cfg::aimbot::flick_overshoot_px, 0.f, 20.f, "%.1f");
+							ImGui::SetItemTooltip("How many pixels to overshoot during the initial snap before correcting back");
+						}
+						ImGui::EndDisabled();
 					}
 					ImGui::EndDisabled();
 
@@ -197,6 +225,7 @@ void Menu::RenderImpl() {
 					{
 						ImGui::SliderFloat("Horizontal", &cfg::rcs::horizontal, 0.0f, 2.0f, "%.2f");
 						ImGui::SliderFloat("Vertical", &cfg::rcs::vertical, 0.0f, 2.0f, "%.2f");
+						ImGui::SliderFloat("RCS Smooth", &cfg::rcs::smooth, 0.0f, 5.0f, "%.2f");
 						ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.0f, 1.0f), "Note: Requires game offset to work");
 					}
 					ImGui::EndDisabled();

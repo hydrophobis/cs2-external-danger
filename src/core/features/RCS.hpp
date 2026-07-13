@@ -6,7 +6,4 @@
 class RCS {
 public:
     static void Run();
-    
-private:
-    static Vec3_t last_punch_angle;
 };

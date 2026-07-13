@@ -45,8 +45,15 @@ bool Config::ReadImpl() {
 		cfg::aimbot::velocity_comp = aim.value("velocity_comp", true);
 		cfg::aimbot::velocity_comp_scale = aim.value("velocity_comp_scale", 0.02f);
 		cfg::aimbot::rcs = aim.value("rcs", true);
+		cfg::aimbot::aim_assist = aim.value("aim_assist", false);
 		cfg::aimbot::multibone = aim.value("multibone", true);
 		cfg::aimbot::multibone_closest = aim.value("multibone_closest", true);
+		cfg::aimbot::humanization = aim.value("humanization", true);
+		cfg::aimbot::reaction_time_ms = aim.value("reaction_time_ms", 200.f);
+		cfg::aimbot::aim_error_px = aim.value("aim_error_px", 3.5f);
+		cfg::aimbot::tracking_jitter = aim.value("tracking_jitter", 0.8f);
+		cfg::aimbot::miss_chance = aim.value("miss_chance", 0.08f);
+		cfg::aimbot::flick_overshoot_px = aim.value("flick_overshoot_px", 4.0f);
 
 		// triggerbot
 		const auto& trig = data["triggerbot"];
@@ -98,8 +105,15 @@ bool Config::WriteImpl() {
 	data["aimbot"]["velocity_comp"] = cfg::aimbot::velocity_comp;
 	data["aimbot"]["velocity_comp_scale"] = cfg::aimbot::velocity_comp_scale;
 	data["aimbot"]["rcs"] = cfg::aimbot::rcs;
+	data["aimbot"]["aim_assist"] = cfg::aimbot::aim_assist;
 	data["aimbot"]["multibone"] = cfg::aimbot::multibone;
 	data["aimbot"]["multibone_closest"] = cfg::aimbot::multibone_closest;
+	data["aimbot"]["humanization"] = cfg::aimbot::humanization;
+	data["aimbot"]["reaction_time_ms"] = cfg::aimbot::reaction_time_ms;
+	data["aimbot"]["aim_error_px"] = cfg::aimbot::aim_error_px;
+	data["aimbot"]["tracking_jitter"] = cfg::aimbot::tracking_jitter;
+	data["aimbot"]["miss_chance"] = cfg::aimbot::miss_chance;
+	data["aimbot"]["flick_overshoot_px"] = cfg::aimbot::flick_overshoot_px;
 
 	// triggerbot
 	data["triggerbot"]["enabled"] = cfg::triggerbot::enabled;

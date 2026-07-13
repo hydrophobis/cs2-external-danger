@@ -1,7 +1,18 @@
 #pragma once
+#include <atomic>
 #include "core/engine/classes/Bones.hpp"
 #include "core/engine/classes/Weapon.hpp"
 #include "core/engine/classes/ObserverServices.hpp"
+
+template <typename T>
+struct CopyableAtomic : std::atomic<T> {
+    using std::atomic<T>::atomic;
+    CopyableAtomic() noexcept = default;
+    CopyableAtomic(const CopyableAtomic& o) noexcept : std::atomic<T>(o.load()) {}
+    CopyableAtomic& operator=(const CopyableAtomic& o) noexcept { this->store(o.load()); return *this; }
+    CopyableAtomic(CopyableAtomic&& o) noexcept : std::atomic<T>(o.load()) {}
+    CopyableAtomic& operator=(CopyableAtomic&& o) noexcept { this->store(o.load()); return *this; }
+};
 
 class Player {
 public:
@@ -17,7 +28,10 @@ public:
     Vec3_t pos;
     Vec3_t vel;
     Vec2_t aimPunch;
-    
+
+    CopyableAtomic<float> punch_delta_x{ 0.f };
+    CopyableAtomic<float> punch_delta_y{ 0.f };
+
     int ping = 0;
     int32_t shotsFired = 0;
     int team = 0;

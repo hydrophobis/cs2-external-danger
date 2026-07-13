@@ -1,73 +1,78 @@
 #include "Triggerbot.hpp"
+#include "core/engine/Engine.hpp"
+#include "core/offsets/Offsets.hpp"
+#include "Aimbot.hpp"
+#include <Windows.h>
+#include <random>
+
+using pNtUserSendInput = LONG(__stdcall*)(UINT, LPINPUT, int);
+static pNtUserSendInput NtUserSendInput = nullptr;
+static HMODULE hWin32u = nullptr;
+
+static void InitNtUserSendInput() {
+    if (NtUserSendInput) return;
+    hWin32u = GetModuleHandleA("win32u.dll");
+    if (!hWin32u) hWin32u = LoadLibraryA("win32u.dll");
+    if (!hWin32u) return;
+    NtUserSendInput = (pNtUserSendInput)GetProcAddress(hWin32u, "NtUserSendInput");
+}
 
 void Triggerbot::Run() {
+    static bool first_run = true;
+    if (first_run) {
+        InitNtUserSendInput();
+        first_run = false;
+    }
+
     if (!cfg::triggerbot::enabled)
         return;
 
-    // Check if trigger key is pressed
+    if (!cfg::aimbot::enabled || !Aimbot::is_aiming)
+        return;
+
+    auto& cache = Cache::Get();
+    if (!cache.local.alive || !cache.local.pawn_addr)
+        return;
+
     if (!(GetAsyncKeyState(cfg::triggerbot::key) & 0x8000))
         return;
 
-    auto& cache = Cache::Get();
-    if (!cache.local.alive)
+    HWND gameWnd = FindWindowA(nullptr, "Counter-Strike 2");
+    if (!gameWnd || GetForegroundWindow() != gameWnd)
         return;
 
-    if (IsCrosshairOnEnemy()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(cfg::triggerbot::delay));
-        Shoot();
+    int delay = cfg::triggerbot::delay;
+    if (cfg::triggerbot::randomization) {
+        static std::random_device rd;
+        static std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> dist(-30, 30);
+        delay = std::max(0, delay + dist(gen));
     }
-}
 
-bool Triggerbot::IsCrosshairOnEnemy() {
-    auto& cache = Cache::Get();
-    
-    // Simple implementation: check if any enemy is close to screen center
-    Vec2_t screen_center = { 960.0f, 540.0f }; // 1920x1080 center
-    
-    for (const auto& player : cache.players) {
-        if (!player.alive || player.localplayer)
-            continue;
-            
-        if (!cfg::triggerbot::team && player.team == cache.local.team)
-            continue;
+    if (delay > 0)
+        std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 
-        // Check if player head is near crosshair
-        if (player.bone_list.size() > 6) {
-            Vec3_t head_pos = player.bone_list[6].pos;
-            
-            // World to screen
-            const auto& vm = cache.game.view_matrix;
-            float w = vm.matrix[3][0] * head_pos.x + vm.matrix[3][1] * head_pos.y + 
-                      vm.matrix[3][2] * head_pos.z + vm.matrix[3][3];
+    if (!cfg::triggerbot::enabled) return;
+    if (!Aimbot::is_aiming) return;
+    if (!cache.local.alive) return;
 
-            if (w < 0.001f)
-                continue;
-
-            float x = vm.matrix[0][0] * head_pos.x + vm.matrix[0][1] * head_pos.y + 
-                      vm.matrix[0][2] * head_pos.z + vm.matrix[0][3];
-            float y = vm.matrix[1][0] * head_pos.x + vm.matrix[1][1] * head_pos.y + 
-                      vm.matrix[1][2] * head_pos.z + vm.matrix[1][3];
-
-            Vec2_t screen_pos;
-            screen_pos.x = 960.0f * (1.0f + x / w);
-            screen_pos.y = 540.0f * (1.0f - y / w);
-
-            // Check distance from center
-            float dx = screen_pos.x - screen_center.x;
-            float dy = screen_pos.y - screen_center.y;
-            float dist = sqrtf(dx * dx + dy * dy);
-
-            if (dist < 50.0f) // Within 50 pixels of crosshair
-                return true;
-        }
+    bool under_crosshair = false;
+    if (cache.local.index >= 0) {
+        under_crosshair = cache.local.index >= 0;
     }
-    
-    return false;
-}
 
-void Triggerbot::Shoot() {
-    // Simulate mouse click
-    mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+    if (!under_crosshair)
+        return;
+
+    if (NtUserSendInput) {
+        INPUT input = {};
+        input.type = INPUT_MOUSE;
+        input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+        NtUserSendInput(1, &input, sizeof(INPUT));
+
+        input = {};
+        input.type = INPUT_MOUSE;
+        input.mi.dwFlags = MOUSEEVENTF_LEFTUP;
+        NtUserSendInput(1, &input, sizeof(INPUT));
+    }
 }

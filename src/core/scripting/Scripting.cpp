@@ -38,6 +38,7 @@ namespace scripting {
         config_map["aimbot.velocity_comp"] = &cfg::aimbot::velocity_comp;
         config_map["aimbot.velocity_comp_scale"] = &cfg::aimbot::velocity_comp_scale;
         config_map["aimbot.rcs"] = &cfg::aimbot::rcs;
+        config_map["aimbot.aim_assist"] = &cfg::aimbot::aim_assist;
         config_map["aimbot.multibone"] = &cfg::aimbot::multibone;
         config_map["aimbot.multibone_closest"] = &cfg::aimbot::multibone_closest;
         

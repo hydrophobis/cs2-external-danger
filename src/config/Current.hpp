@@ -4,44 +4,55 @@
 namespace cfg {
 	inline bool enabled = true;
 
-	// P2C Features
 	namespace aimbot {
 		inline bool enabled = true;
-		inline int hotkey = VK_XBUTTON2; // Mouse side button
-		inline bool always_on = false; // If true, aimbot is inverted (off when key held)
-		inline float fov = 5.0f; // FOV radius in screen space (multiplied by 10)
-		inline float smooth = 3.0f; // Higher = slower aim movement
-		inline bool visible_only = true; // Only target visible enemies
-		inline bool velocity_comp = true; // Compensate for target velocity
-		inline float velocity_comp_scale = 0.02f; // Velocity compensation scale
-		inline bool rcs = true; // Recoil control integrated into aimbot
-		
-		// Multibone targeting
-		inline bool multibone = true; // Try multiple bones
-		inline bool multibone_closest = true; // If true: aim at closest bone. If false: use priority order
-		inline int bone_priority[5] = { 7, 6, 5, 4, 2 }; // head, neck, upper_chest, chest, spine_1
+		inline int hotkey = VK_XBUTTON2;
+		inline bool always_on = false;
+		inline float fov = 5.0f;
+		inline float smooth = 3.0f;
+		inline bool visible_only = true;
+		inline bool velocity_comp = true;
+		inline float velocity_comp_scale = 0.02f;
+		inline bool rcs = true;
+
+		inline bool aim_assist = false;
+
+		inline bool multibone = true;
+		inline bool multibone_closest = true;
+		inline int bone_priority[5] = { 7, 6, 5, 4, 2 };
+
+		inline bool humanization = true;
+		inline float reaction_time_ms = 200.f;
+		inline float aim_error_px = 3.5f;
+		inline float tracking_jitter = 0.8f;
+		inline float miss_chance = 0.08f;
+		inline float flick_overshoot_px = 4.0f;
+		inline float dead_zone = 0.f;
+		inline bool dead_zone_enabled = true;
+		inline float stop_threshold = 1.5f;
 	}
 
 	namespace triggerbot {
 		inline bool enabled = false;
 		inline bool team = false;
-		inline int key = VK_XBUTTON1; // Mouse side button
-		inline int delay = 50; // ms
+		inline int key = VK_XBUTTON1;
+		inline int delay = 50;
 		inline bool only_in_crosshair = true;
+		inline bool randomization = true;
 	}
 
 	namespace rcs {
-		inline bool enabled = true; // RCS enabled by default
-		inline float horizontal = 1.0f; // 0.0 - 2.0
-		inline float vertical = 1.0f; // 0.0 - 2.0
+		inline bool enabled = true;
+		inline float horizontal = 1.0f;
+		inline float vertical = 1.0f;
+		inline float smooth = 1.0f;
 	}
 
 	namespace antiflash {
 		inline bool enabled = true;
-		inline float opacity = 0.0f; // 0.0 = no flash, 1.0 = full flash
+		inline float opacity = 0.0f;
 	}
 
-	// ESP Features (Original)
 	namespace esp {
 		inline bool team = true;
 
@@ -100,18 +111,14 @@ namespace cfg {
 				inline color_t c4_team{ 1.f, 0.84f, 0.f, 1.f };
 				inline color_t c4_enemy{ 1.f, 0.84f, 0.f, 1.f };
 			}
-			
 		}
-
 	}
 
 	namespace world {
 		namespace spectators {
 			inline bool enabled = false;
-
 			inline bool detailed = false;
 			inline bool self_only = true;
-
 			inline Vec2_t pos{ 10.f, 100.f };
 		}
 
@@ -138,7 +145,6 @@ namespace cfg {
 			inline bool enabled = false;
 			inline int sample_rate = 35;
 			inline float sample_length = 5.f;
-
 			inline Vec2_t size{ 400.f, 100.f };
 			inline Vec2_t pos{ 10.f, 400.f };
 		}
@@ -149,10 +155,9 @@ namespace cfg {
 		inline bool streamproof = false;
 		inline bool vsync = false;
 		inline bool free_cpu = true;
-		inline int update_rate = 1; // P2C update rate
+		inline int update_rate = 1;
 	}
 
-	// Not stored, just for testing
 	namespace dev {
 		inline bool console = true;
 		inline int open_menu_key = false;

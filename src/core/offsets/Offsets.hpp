@@ -50,6 +50,7 @@ namespace offsets
 		constexpr std::ptrdiff_t m_unpredictableBaseAngle = 0xA4;
 		
 		constexpr std::ptrdiff_t m_angEyeAngles = 0x1540;
+		constexpr std::ptrdiff_t m_iIDEntIndex = 0x344C;
 		
 		constexpr std::ptrdiff_t m_pWeaponServices = 0x1208; // CPlayer_WeaponServices*
 		constexpr std::ptrdiff_t m_hActiveWeapon = 0x60; // CHandle<C_BasePlayerWeapon> - CPlayer_WeaponServices
