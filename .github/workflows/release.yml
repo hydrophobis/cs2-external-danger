@@ -27,6 +27,7 @@ jobs:
         run: |
           mkdir release
           xcopy x64\Release\* release\ /E /I /Y
+          xcopy maps\* release\maps\ /E /I /Y
           copy README.md release\README.md
           copy LICENSE release\LICENSE
 

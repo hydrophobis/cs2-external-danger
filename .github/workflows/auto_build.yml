@@ -38,3 +38,4 @@ jobs:
         name: build-artifacts
         path: |
           x64/Release/*
+          maps/*
