@@ -217,7 +217,7 @@ void Aimbot::Thread() {
         for (auto& p : snap.players) {
             if (!p.alive || p.localplayer) continue;
             if (p.team == snap.local.team) continue;
-            if (cfg::aimbot::visible_only && !p.spotted) continue;
+            if (cfg::aimbot::visible_only && !p.visible) continue;
             if (p.bone_list.empty()) continue;
 
             if (cfg::aimbot::multibone) {
