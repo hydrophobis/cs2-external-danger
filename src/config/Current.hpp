@@ -20,6 +20,9 @@ namespace cfg {
 		inline bool multibone = true;
 		inline bool multibone_closest = true;
 		inline int bone_priority[5] = { 7, 6, 5, 4, 2 };
+		inline bool multibone_interpolate = true;
+		inline int multibone_interp_steps = 2;
+		inline bool exposed_bones_only = false;
 
 		inline bool humanization = true;
 		inline float reaction_time_ms = 200.f;

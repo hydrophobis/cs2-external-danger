@@ -1,5 +1,6 @@
 #include "Aimbot.hpp"
 #include "core/engine/Engine.hpp"
+#include "core/vischeck/VisCheckManager.h"
 #include <thread>
 #include <cmath>
 #include <algorithm>
@@ -220,52 +221,157 @@ void Aimbot::Thread() {
             if (cfg::aimbot::visible_only && !p.visible) continue;
             if (p.bone_list.empty()) continue;
 
+            // Get eye position for exposed-bone visibility checks
+            Vec3_t eyePos = snap.local.bone_list.size() > (int)bone_index::head
+                ? snap.local.bone_list[bone_index::head].pos
+                : snap.local.pos + Vec3_t(0, 0, 64.f);
+
+            const bool doInterp = cfg::aimbot::multibone_interpolate;
+            const bool doExposed = cfg::aimbot::exposed_bones_only;
+            const int interpSteps = std::max(1, std::min(cfg::aimbot::multibone_interp_steps, 5));
+
             if (cfg::aimbot::multibone) {
                 int bones_to_check = std::min(5, (int)p.bone_list.size());
-                if (cfg::aimbot::multibone_closest) {
-                    for (int i = 0; i < bones_to_check; ++i) {
-                        int bi = cfg::aimbot::bone_priority[i];
-                        if (bi < 0 || bi >= (int)p.bone_list.size()) continue;
-                        Vec2_t sPos;
-                        Vec3_t wPos = ApplyVelocityComp(p.bone_list[bi].pos, p, snap);
-                        if (!snap.game.view_matrix.wts(wPos, screen, sPos, false))
-                            continue;
-                        float d = std::sqrt((sPos.x - centre.x) * (sPos.x - centre.x) +
-                                            (sPos.y - centre.y) * (sPos.y - centre.y));
-                        if (d < bestDist) {
-                            bestDist = d;
-                            bestTarget = const_cast<Player*>(&p);
-                            bestTargetPos = sPos;
-                            bestBone = bi;
-                            bestIdx = p.index;
+
+                // Lambda: test a single world-space point, optional exposed check
+                auto testPoint = [&](int boneIdx, const Vec3_t& wPos) -> bool {
+                    if (boneIdx < 0 || boneIdx >= (int)p.bone_list.size())
+                        return false;
+                    // Exposed-only: skip if bone is behind cover
+                    if (doExposed && VisCheckManager::IsReady()) {
+                        if (!VisCheckManager::IsVisible(eyePos, wPos))
+                            return false;
+                    }
+                    Vec2_t sPos;
+                    if (!snap.game.view_matrix.wts(wPos, screen, sPos, false))
+                        return false;
+                    float d = std::sqrt((sPos.x - centre.x) * (sPos.x - centre.x) +
+                                        (sPos.y - centre.y) * (sPos.y - centre.y));
+                    if (d < bestDist) {
+                        bestDist = d;
+                        bestTarget = const_cast<Player*>(&p);
+                        bestTargetPos = sPos;
+                        bestBone = boneIdx;
+                        bestIdx = p.index;
+                        return true;
+                    }
+                    return false;
+                };
+
+                // Lambda: test a bone and optionally interpolated segments to connected bones
+                auto testBoneWithSegments = [&](int bi) {
+                    if (bi < 0 || bi >= (int)p.bone_list.size()) return;
+                    Vec3_t wPos = ApplyVelocityComp(p.bone_list[bi].pos, p, snap);
+                    testPoint(bi, wPos);
+
+                    if (!doInterp) return;
+
+                    // Generate interpolated points along skeleton connections to this bone
+                    for (const auto& conn : connections) {
+                        int other = -1;
+                        if (conn[0] == bi) other = conn[1];
+                        else if (conn[1] == bi) other = conn[0];
+                        if (other < 0 || other >= (int)p.bone_list.size()) continue;
+
+                        Vec3_t otherPos = ApplyVelocityComp(p.bone_list[other].pos, p, snap);
+                        for (int step = 1; step <= interpSteps; ++step) {
+                            float t = (float)step / (float)(interpSteps + 1);
+                            Vec3_t interpPos = {
+                                wPos.x + (otherPos.x - wPos.x) * t,
+                                wPos.y + (otherPos.y - wPos.y) * t,
+                                wPos.z + (otherPos.z - wPos.z) * t
+                            };
+                            // Use the same boneIdx for segment points (they count as that bone)
+                            testPoint(bi, interpPos);
                         }
                     }
+                };
+
+                if (cfg::aimbot::multibone_closest) {
+                    // Closest mode: check all bones (+segments), pick whichever is nearest to crosshair
+                    for (int i = 0; i < bones_to_check; ++i) {
+                        testBoneWithSegments(cfg::aimbot::bone_priority[i]);
+                    }
                 } else {
+                    // Priority mode: first bone in FOV wins
                     for (int i = 0; i < bones_to_check; ++i) {
                         int bi = cfg::aimbot::bone_priority[i];
                         if (bi < 0 || bi >= (int)p.bone_list.size()) continue;
-                        Vec2_t sPos;
+                        
+                        // Try the bone itself first (only if not blocked by exposed check)
+                        bool boneBlocked = false;
                         Vec3_t wPos = ApplyVelocityComp(p.bone_list[bi].pos, p, snap);
-                        if (!snap.game.view_matrix.wts(wPos, screen, sPos, false))
-                            continue;
-                        float d = std::sqrt((sPos.x - centre.x) * (sPos.x - centre.x) +
-                                            (sPos.y - centre.y) * (sPos.y - centre.y));
-                        if (d < aimFov * 10.f) {
-                            if (d < bestDist) {
-                                bestDist = d;
-                                bestTarget = const_cast<Player*>(&p);
-                                bestTargetPos = sPos;
-                                bestBone = bi;
-                                bestIdx = p.index;
+                        
+                        if (doExposed && VisCheckManager::IsReady()) {
+                            if (!VisCheckManager::IsVisible(eyePos, wPos))
+                                boneBlocked = true;
+                        }
+                        
+                        if (!boneBlocked) {
+                            Vec2_t sPos;
+                            if (snap.game.view_matrix.wts(wPos, screen, sPos, false)) {
+                                float d = std::sqrt((sPos.x - centre.x) * (sPos.x - centre.x) +
+                                                    (sPos.y - centre.y) * (sPos.y - centre.y));
+                                if (d < aimFov * 10.f) {
+                                    bestDist = d;
+                                    bestTarget = const_cast<Player*>(&p);
+                                    bestTargetPos = sPos;
+                                    bestBone = bi;
+                                    bestIdx = p.index;
+                                    break;
+                                }
                             }
-                            break;
+                        }
+
+                        // Try interpolated segment points toward connected bones
+                        if (doInterp) {
+                            bool found = false;
+                            for (const auto& conn : connections) {
+                                int other = -1;
+                                if (conn[0] == bi) other = conn[1];
+                                else if (conn[1] == bi) other = conn[0];
+                                if (other < 0 || other >= (int)p.bone_list.size()) continue;
+
+                                Vec3_t otherPos = ApplyVelocityComp(p.bone_list[other].pos, p, snap);
+                                for (int step = 1; step <= interpSteps; ++step) {
+                                    float t = (float)step / (float)(interpSteps + 1);
+                                    Vec3_t interpPos = {
+                                        wPos.x + (otherPos.x - wPos.x) * t,
+                                        wPos.y + (otherPos.y - wPos.y) * t,
+                                        wPos.z + (otherPos.z - wPos.z) * t
+                                    };
+                                    
+                                    if (doExposed && VisCheckManager::IsReady()) {
+                                        if (!VisCheckManager::IsVisible(eyePos, interpPos))
+                                            continue;
+                                    }
+                                    
+                                    Vec2_t sPos;
+                                    if (!snap.game.view_matrix.wts(interpPos, screen, sPos, false))
+                                        continue;
+                                    float d = std::sqrt((sPos.x - centre.x) * (sPos.x - centre.x) +
+                                                        (sPos.y - centre.y) * (sPos.y - centre.y));
+                                    if (d < aimFov * 10.f) {
+                                        bestDist = d;
+                                        bestTarget = const_cast<Player*>(&p);
+                                        bestTargetPos = sPos;
+                                        bestBone = bi;
+                                        bestIdx = p.index;
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (found) break;
+                            }
+                            if (found) break;
                         }
                     }
                 }
             } else {
-                if ((int)bone_index::head >= (int)p.bone_list.size()) continue;
+                int headIdx = (int)bone_index::head;
+                if (headIdx >= (int)p.bone_list.size()) continue;
+                Vec3_t wPos = ApplyVelocityComp(p.bone_list[headIdx].pos, p, snap);
                 Vec2_t sPos;
-                Vec3_t wPos = ApplyVelocityComp(p.bone_list[bone_index::head].pos, p, snap);
                 if (!snap.game.view_matrix.wts(wPos, screen, sPos, false))
                     continue;
                 float d = std::sqrt((sPos.x - centre.x) * (sPos.x - centre.x) +
@@ -274,7 +380,7 @@ void Aimbot::Thread() {
                     bestDist = d;
                     bestTarget = const_cast<Player*>(&p);
                     bestTargetPos = sPos;
-                    bestBone = bone_index::head;
+                    bestBone = headIdx;
                     bestIdx = p.index;
                 }
             }
@@ -329,33 +435,43 @@ void Aimbot::Thread() {
             continue;
         }
 
-        if (bestIdx != s.lastTargetIndex || s.acquiredBone < 0) {
+        // Update acquired bone. When interpolation/closest mode is active,
+        // re-evaluate every frame so user can nudge aim toward head and the
+        // aimbot follows to the new closest bone/segment point.
+        bool dynamicBone = cfg::aimbot::multibone
+            && (cfg::aimbot::multibone_interpolate || cfg::aimbot::multibone_closest);
+        bool fullReeval = (bestIdx != s.lastTargetIndex || s.acquiredBone < 0);
+
+        if (fullReeval || dynamicBone) {
             int bone = bestBone;
             if (bone < 0 || bone >= (int)bestTarget->bone_list.size())
                 bone = bone_index::head;
             if (bone < 0 || bone >= (int)bestTarget->bone_list.size())
                 bone = (int)bestTarget->bone_list.size() - 1;
-            s.acquiredBone = bone;
 
-            s.offsetInitialised = false;  
-            s.filterReady       = false;
-            s.filteredVel       = { 0.f, 0.f };
-            s.vel               = { 0.f, 0.f };
+            // Only do full filter/humanization reset on actual target switch
+            if (fullReeval) {
+                s.offsetInitialised = false;
+                s.filterReady       = false;
+                s.filteredVel       = { 0.f, 0.f };
+                s.vel               = { 0.f, 0.f };
 
-            s.curveBias = { 0.f, 0.f };
-            if (cfg::aimbot::humanization && !cfg::aimbot::aim_assist) {
-                float ex = bestTargetPos.x - centre.x;
-                float ey = bestTargetPos.y - centre.y;
-                float el = std::sqrt(ex * ex + ey * ey);
-                if (el > 1.f) {
-                    float nx = -ey / el, ny = ex / el; 
-                    std::uniform_real_distribution<float> cd(-1.f, 1.f);
-                    float mag  = std::min(el * 0.18f, 35.f)
-                               * (0.25f + 0.75f * std::fabs(cd(s_gen)));
-                    float sign = (cd(s_gen) >= 0.f) ? 1.f : -1.f;
-                    s.curveBias = { nx * mag * sign, ny * mag * sign };
+                s.curveBias = { 0.f, 0.f };
+                if (cfg::aimbot::humanization && !cfg::aimbot::aim_assist) {
+                    float ex = bestTargetPos.x - centre.x;
+                    float ey = bestTargetPos.y - centre.y;
+                    float el = std::sqrt(ex * ex + ey * ey);
+                    if (el > 1.f) {
+                        float nx = -ey / el, ny = ex / el;
+                        std::uniform_real_distribution<float> cd(-1.f, 1.f);
+                        float mag  = std::min(el * 0.18f, 35.f)
+                                   * (0.25f + 0.75f * std::fabs(cd(s_gen)));
+                        float sign = (cd(s_gen) >= 0.f) ? 1.f : -1.f;
+                        s.curveBias = { nx * mag * sign, ny * mag * sign };
+                    }
                 }
             }
+            s.acquiredBone = bone;
         }
 
         int bone = s.acquiredBone;

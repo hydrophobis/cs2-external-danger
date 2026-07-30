@@ -48,6 +48,9 @@ bool Config::ReadImpl() {
 		cfg::aimbot::aim_assist = aim.value("aim_assist", false);
 		cfg::aimbot::multibone = aim.value("multibone", true);
 		cfg::aimbot::multibone_closest = aim.value("multibone_closest", true);
+		cfg::aimbot::multibone_interpolate = aim.value("multibone_interpolate", true);
+		cfg::aimbot::multibone_interp_steps = aim.value("multibone_interp_steps", 2);
+		cfg::aimbot::exposed_bones_only = aim.value("exposed_bones_only", false);
 		cfg::aimbot::humanization = aim.value("humanization", true);
 		cfg::aimbot::reaction_time_ms = aim.value("reaction_time_ms", 200.f);
 		cfg::aimbot::aim_error_px = aim.value("aim_error_px", 3.5f);
@@ -108,6 +111,9 @@ bool Config::WriteImpl() {
 	data["aimbot"]["aim_assist"] = cfg::aimbot::aim_assist;
 	data["aimbot"]["multibone"] = cfg::aimbot::multibone;
 	data["aimbot"]["multibone_closest"] = cfg::aimbot::multibone_closest;
+	data["aimbot"]["multibone_interpolate"] = cfg::aimbot::multibone_interpolate;
+	data["aimbot"]["multibone_interp_steps"] = cfg::aimbot::multibone_interp_steps;
+	data["aimbot"]["exposed_bones_only"] = cfg::aimbot::exposed_bones_only;
 	data["aimbot"]["humanization"] = cfg::aimbot::humanization;
 	data["aimbot"]["reaction_time_ms"] = cfg::aimbot::reaction_time_ms;
 	data["aimbot"]["aim_error_px"] = cfg::aimbot::aim_error_px;

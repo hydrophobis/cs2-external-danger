@@ -133,6 +133,17 @@ void Menu::RenderImpl() {
 						ImGui::BeginDisabled(!cfg::aimbot::multibone);
 						ImGui::Checkbox("  Closest Bone Mode", &cfg::aimbot::multibone_closest);
 						ImGui::SetItemTooltip("If ON: aim at whichever bone is closest to crosshair.\nIf OFF: use priority (head -> neck -> chest)");
+						
+						ImGui::Checkbox("  Interpolate Segments", &cfg::aimbot::multibone_interpolate);
+						ImGui::SetItemTooltip("Also aim at points between connected bones (neck→head, shoulder→elbow, etc.)\nMakes aimbot looser, less HSP but good accuracy");
+						
+						ImGui::BeginDisabled(!cfg::aimbot::multibone_interpolate);
+						ImGui::SliderInt("  Interp Steps", &cfg::aimbot::multibone_interp_steps, 1, 5);
+						ImGui::SetItemTooltip("Number of sample points between each bone pair");
+						ImGui::EndDisabled();
+						
+						ImGui::Checkbox("  Exposed Bones Only", &cfg::aimbot::exposed_bones_only);
+						ImGui::SetItemTooltip("Only aim at bones/skin that are visible via raytrace (not behind cover)");
 						ImGui::EndDisabled();
 						
 						ImGui::Checkbox("Velocity Compensation", &cfg::aimbot::velocity_comp);
