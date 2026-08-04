@@ -37,6 +37,8 @@ bool Engine::InitImpl() {
         return false;
     }
 
+    this->CheckGameBuild();
+
     if (!Config::Read())
         LOGF(WARNING, "Failed to parse config, using default values");
 
@@ -45,17 +47,43 @@ bool Engine::InitImpl() {
         LogHelper::Free();
 #endif
 
-    std::thread(&Engine::Thread, this).detach();
+    thread_ = std::thread(&Engine::Thread, this);
 
     LOGF(INFO, "Successfully initialized engine...");
     return true;
 }
 
-void Engine::Thread() {
-    // TODO: Check build number 
-    // uintptr_t number = process->read<uintptr_t>(base_engine.base + offsets::buildNumber);
+void Engine::Shutdown() {
+    GetInstance().ShutdownImpl();
+}
 
-    while (true) {
+void Engine::ShutdownImpl() {
+    if (thread_.joinable())
+        thread_.join();
+}
+
+void Engine::CheckGameBuild() {
+    int build = process->read<int>(this->engine.base + offsets::buildNumber);
+
+    if (build <= 0) {
+        LOGF(WARNING, "Could not read the game build number, offsets may be out of date");
+        return;
+    }
+
+    if (build != offsets::dumpedBuildNumber) {
+        LOGF(WARNING,
+            "Game build is {} but offsets were dumped for {}. Features may misbehave, "
+            "run 'python tools/update_offsets.py' to refresh them, and maybe make a PR cuz im lazy",
+            build, offsets::dumpedBuildNumber
+        );
+        return;
+    }
+
+    LOGF(VERBOSE, "Game build {} matches the dumped offsets", build);
+}
+
+void Engine::Thread() {
+    while (app::running) {
         auto start = steady_clock::now();
 
         Cache::Refresh();

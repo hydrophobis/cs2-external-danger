@@ -1,4 +1,5 @@
 #include "Aimbot.hpp"
+#include "RCS.hpp"
 #include "core/engine/Engine.hpp"
 #include "core/vischeck/VisCheckManager.h"
 #include <thread>
@@ -39,57 +40,6 @@ static Vec2_t ComputeTremor(float tSec, float jitterAmp) {
     };
 }
 
-WeaponType Aimbot::GetWeaponType(short weaponId) {
-    switch (weaponId) {
-        case weapon_ak47:
-        case weapon_m4a1:
-        case weapon_m4a1_silencer:
-        case weapon_aug:
-        case weapon_famas:
-        case weapon_galilar:
-        case weapon_sg556:
-            return WeaponType::RIFLE;
-        case weapon_p90:
-        case weapon_mp7:
-        case weapon_mp9:
-        case weapon_mp5sd:
-        case weapon_mac10:
-        case weapon_ump45:
-        case weapon_bizon:
-            return WeaponType::SMG;
-        case weapon_awp:
-        case weapon_ssg08:
-        case weapon_scar20:
-        case weapon_g3sg1:
-            return WeaponType::SNIPER;
-        case weapon_deagle:
-        case weapon_elite:
-        case weapon_fiveseven:
-        case weapon_glock:
-        case weapon_hkp2000:
-        case weapon_p250:
-        case weapon_tec9:
-        case weapon_usp_silencer:
-        case weapon_cz75a:
-        case weapon_revolver:
-            return WeaponType::PISTOL;
-        case weapon_m249:
-        case weapon_negev:
-        case weapon_xm1014:
-        case weapon_mag7:
-        case weapon_nova:
-        case weapon_sawedoff:
-            return WeaponType::HEAVY;
-        default:
-            return WeaponType::OTHER;
-    }
-}
-
-void Aimbot::GetWeaponSettings(WeaponType type, float& fov, float& smooth) {
-    fov    = cfg::aimbot::fov;
-    smooth = cfg::aimbot::smooth;
-}
-
 Vec2_t Aimbot::ApplyHumanError(Vec2_t target) {
     if (!cfg::aimbot::humanization || cfg::aimbot::aim_error_px < 0.01f)
         return target;
@@ -123,6 +73,29 @@ bool Aimbot::ShouldMissShot(int targetIndex) {
     return false;
 }
 
+struct AimingFlagGuard {
+    bool aiming = false;
+    ~AimingFlagGuard() { Aimbot::is_aiming = aiming; }
+};
+
+struct RcsIdleGuard {
+    RcsController& rcs;
+    bool used = false;
+    ~RcsIdleGuard() { if (!used) rcs.Reset(); }
+};
+
+static void SendMouseMove(LONG dx, LONG dy) {
+    if ((dx == 0 && dy == 0) || !NtUserSendInput)
+        return;
+
+    INPUT input = {};
+    input.type = INPUT_MOUSE;
+    input.mi.dwFlags = MOUSEEVENTF_MOVE;
+    input.mi.dx = dx;
+    input.mi.dy = dy;
+    NtUserSendInput(1, &input, sizeof(INPUT));
+}
+
 static Vec3_t ApplyVelocityComp(const Vec3_t& pos, const Player& player,
                                 const Snapshot& snapshot) {
     if (!cfg::aimbot::velocity_comp)
@@ -136,15 +109,24 @@ static Vec3_t ApplyVelocityComp(const Vec3_t& pos, const Player& player,
 }
 
 void Aimbot::Init() {
-    std::thread(Aimbot::Thread).detach();
+    thread_ = std::thread(Aimbot::Thread);
+}
+
+void Aimbot::Shutdown() {
+    if (thread_.joinable())
+        thread_.join();
 }
 
 void Aimbot::Thread() {
     float remX = 0.f, remY = 0.f;
+    RcsController rcs;
     InitNtUserSendInput();
 
-    while (true) {
+    while (app::running) {
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+        AimingFlagGuard aimFlag;
+        RcsIdleGuard rcsGuard{ rcs };
 
         auto now = std::chrono::steady_clock::now();
         float dt = std::chrono::duration<float>(now - s.lastFrame).count();
@@ -157,7 +139,6 @@ void Aimbot::Thread() {
         auto snap = Cache::CopySnapshot();
         if (!snap.local.alive) {
             s = LegitbotState{};
-            Aimbot::is_aiming = false;
             continue;
         }
 
@@ -182,7 +163,6 @@ void Aimbot::Thread() {
 
         bool keyDown  = (GetAsyncKeyState(cfg::aimbot::hotkey) & 0x8000) != 0;
         bool aimActive = cfg::aimbot::always_on ? !keyDown : keyDown;
-        Aimbot::is_aiming = false;
 
         bool keyJustActivated = aimActive && !s.keyWasDown;
         s.keyWasDown = aimActive;
@@ -430,7 +410,7 @@ void Aimbot::Thread() {
         }
 
         if (ShouldMissShot(bestIdx)) {
-            Aimbot::is_aiming = true;
+            aimFlag.aiming = true;
             s.wasAiming = true;
             continue;
         }
@@ -492,12 +472,6 @@ void Aimbot::Thread() {
             }
         }
 
-        if (cfg::aimbot::rcs && snap.local.shotsFired > 0) {
-            Vec2_t punch = snap.local.aimPunch;
-            rawScreen.x += punch.y * 2.0f;
-            rawScreen.y -= punch.x * 2.0f;
-        }
-
         Vec2_t errTarget = ApplyHumanError(rawScreen);
         if (cfg::aimbot::humanization) {
             float tSec = std::chrono::duration<float>(now.time_since_epoch()).count();
@@ -557,6 +531,15 @@ void Aimbot::Thread() {
         if (rest > 0.f && dist <= rest && staticAim) {
             float decay = std::exp(-12.0f * dt);
             s.vel.x *= decay; s.vel.y *= decay;
+            aimFlag.aiming = true;
+            s.wasAiming = true;
+
+            if (cfg::aimbot::rcs && snap.local.shotsFired > 0) {
+                rcsGuard.used = true;
+                LONG rcsX = 0, rcsY = 0;
+                if (rcs.Step(snap.local.aimPunch, dt, rcsX, rcsY))
+                    SendMouseMove(rcsX, rcsY);
+            }
             continue;
         }
 
@@ -570,7 +553,7 @@ void Aimbot::Thread() {
         float mvLen = std::sqrt(mvx * mvx + mvy * mvy);
         if (mvLen > 80.f) { float k = 80.f / mvLen; mvx *= k; mvy *= k; }
 
-        Aimbot::is_aiming  = true;
+        aimFlag.aiming     = true;
         s.wasAiming        = true;
         s.lastTargetIndex  = bestIdx;
         s.lastTargetHealth = bestTarget->health;
@@ -583,13 +566,12 @@ void Aimbot::Thread() {
         remX = fmx - (float)mx;
         remY = fmy - (float)my;
 
-        if ((mx != 0 || my != 0) && NtUserSendInput) {
-            INPUT input = {};
-            input.type = INPUT_MOUSE;
-            input.mi.dwFlags = MOUSEEVENTF_MOVE;
-            input.mi.dx = mx;
-            input.mi.dy = my;
-            NtUserSendInput(1, &input, sizeof(INPUT));
+        LONG rcsX = 0, rcsY = 0;
+        if (cfg::aimbot::rcs && snap.local.shotsFired > 0) {
+            rcsGuard.used = true;
+            rcs.Step(snap.local.aimPunch, dt, rcsX, rcsY);
         }
+
+        SendMouseMove(mx + rcsX, my + rcsY);
     }
 }

@@ -27,9 +27,6 @@ void Triggerbot::Run() {
     if (!cfg::triggerbot::enabled)
         return;
 
-    if (!cfg::aimbot::enabled || !Aimbot::is_aiming)
-        return;
-
     auto& cache = Cache::Get();
     if (!cache.local.alive || !cache.local.pawn_addr)
         return;

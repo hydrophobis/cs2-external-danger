@@ -4,6 +4,7 @@ import sys
 import urllib.request
 
 CLIENT_DLL_URL = "https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/client_dll.json"
+INFO_URL = "https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/info.json"
 OFFSETS_PATH = "src/core/offsets/Offsets.hpp"
 
 FIELD_MAP = {
@@ -55,6 +56,12 @@ def fetch_classes():
     return data["client.dll"]["classes"]
 
 
+def fetch_build_number():
+    with urllib.request.urlopen(INFO_URL, timeout=15) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return data["build_number"]
+
+
 def resolve_offset(classes, class_name, field_name):
     seen = set()
     current = class_name
@@ -69,7 +76,7 @@ def resolve_offset(classes, class_name, field_name):
     return None
 
 
-def update_offsets_file(classes):
+def update_offsets_file(classes, build_number):
     with open(OFFSETS_PATH, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -78,11 +85,23 @@ def update_offsets_file(classes):
         r'^(\s*constexpr\s+std::ptrdiff_t\s+)(\w+)(\s*=\s*)0x([0-9A-Fa-f]+)(\s*;.*)$'
     )
     namespace_open_pattern = re.compile(r'^\s*namespace\s+(\w+)\s*\{')
+    build_pattern = re.compile(
+        r'^(\s*constexpr\s+int\s+dumpedBuildNumber\s*=\s*)(\d+)(\s*;.*)$'
+    )
 
     changed = []
     unresolved = []
+    build_changed = None
 
     for i, line in enumerate(lines):
+        b = build_pattern.match(line)
+        if b:
+            old_build = int(b.group(2))
+            if old_build != build_number:
+                build_changed = (old_build, build_number)
+                lines[i] = f"{b.group(1)}{build_number}{b.group(3)}\n"
+            continue
+
         ns_match = namespace_open_pattern.match(line)
         if ns_match:
             namespace_stack.append(ns_match.group(1))
@@ -118,12 +137,18 @@ def update_offsets_file(classes):
     with open(OFFSETS_PATH, "w", encoding="utf-8") as f:
         f.writelines(lines)
 
-    return changed, unresolved
+    return changed, unresolved, build_changed
 
 
 def main():
     classes = fetch_classes()
-    changed, unresolved = update_offsets_file(classes)
+    build_number = fetch_build_number()
+    changed, unresolved, build_changed = update_offsets_file(classes, build_number)
+
+    if build_changed:
+        print(f"Build number {build_changed[0]} -> {build_changed[1]}")
+    else:
+        print(f"Build number unchanged ({build_number}).")
 
     if changed:
         print(f"Updated {len(changed)} offset(s):")

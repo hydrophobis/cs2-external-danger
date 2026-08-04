@@ -95,9 +95,7 @@ bool Dumper::InitImpl() {
 #endif
 
     // engine2.dll
-
-    // Build Number
-    if (!(temp = Scan(offsets::signatures::buildNumber, engine))) {
+    if (!(temp = Scan(offsets::signatures::buildNumber, engine, 2, 6))) {
         LOGF(FATAL, "Could not find offset for 'buildNumber'");
         return false;
     }
@@ -110,7 +108,7 @@ bool Dumper::InitImpl() {
     return true;
 }
 
-DWORD64 Dumper::Scan(const std::string sig, ProcessModule module) {
+DWORD64 Dumper::Scan(const std::string sig, ProcessModule module, int disp_offset, int inst_length) {
     auto process = Engine::GetProcess();
 
     if (!process)
@@ -126,10 +124,10 @@ DWORD64 Dumper::Scan(const std::string sig, ProcessModule module) {
     if (!list.size())
         return 0;
 
-    if (!process->read_raw(list.at(0) + 3, &offsets, sizeof(DWORD)))
+    if (!process->read_raw(list.at(0) + disp_offset, &offsets, sizeof(DWORD)))
         return 0;
 
-    address = list.at(0) + offsets + 7;
+    address = list.at(0) + offsets + inst_length;
     return address;
 }
 

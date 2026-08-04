@@ -4,29 +4,6 @@
 #include <vector>
 #include <random>
 
-struct AimLock {
-    int playerIndex = -1;
-    int bone = -1;
-
-    bool Valid() const {
-        return playerIndex != -1 && bone != -1;
-    }
-
-    void Reset() {
-        playerIndex = -1;
-        bone = -1;
-    }
-};
-
-enum class WeaponType {
-    RIFLE,
-    SMG,
-    SNIPER,
-    PISTOL,
-    HEAVY,
-    OTHER
-};
-
 struct LegitbotState {
     int lastTargetIndex = -1;
     std::chrono::steady_clock::time_point targetAcquiredTime;
@@ -60,24 +37,15 @@ struct LegitbotState {
 class Aimbot {
 public:
     static void Init();
-    static inline bool is_aiming = false;
+    static void Shutdown();
+
+    static inline std::atomic<bool> is_aiming{ false };
 
 private:
     static void Thread();
 
-    static bool IsValidTarget(const Player& player, const Snapshot& snapshot);
-    static bool AcquireTarget(const Snapshot& snapshot, AimLock& lock);
-    static Vec3_t GetAimPosition(const Player& player, int bone, const Snapshot& snapshot);
-    static Vec3_t SolveAimAngle(const Player& player, int bone, const Snapshot& snapshot);
-    static Vec3_t CalculateAngleRCS(const Snapshot& snapshot, Vec2_t& oldPunch);
-    static Vec2_t CalculateMouseRCS(const Snapshot& snapshot, Vec2_t& oldPunch);
-    static Vec2_t CalculateMouseAim(const Player& target, int bone, const Snapshot& snapshot);
-    static void ApplyAngleWrite(const Vec3_t& delta);
-    static void ApplyMouseAim(const Player& target, int bone, const Snapshot& snapshot);
-    static void ApplyMouseRCS(const Vec2_t& delta, Vec2_t& remainder);
+    static inline std::thread thread_;
 
-    static WeaponType GetWeaponType(short weaponId);
-    static void GetWeaponSettings(WeaponType type, float& smooth, float& fov);
     static Vec2_t ApplyHumanError(Vec2_t target);
     static bool ShouldMissShot(int targetIndex);
 };

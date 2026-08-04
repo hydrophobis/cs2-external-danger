@@ -7,5 +7,6 @@
 class Features {
 public:
     static void Run();
+    static void Shutdown();
     static void DrawOverlays();
 };

@@ -51,6 +51,11 @@ int main()
 
 exit:
     LOGF(INFO, "Shutting down...");
+
+    app::running = false;
+    Features::Shutdown();
+    Engine::Shutdown();
+
     LogHelper::Destroy();
     std::cin.get();
 }

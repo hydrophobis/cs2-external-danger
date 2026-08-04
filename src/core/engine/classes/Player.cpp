@@ -134,18 +134,7 @@ bool Player::UpdatePawn() {
 		uintptr_t aim_punch_service = p->read<uintptr_t>(pawn + offsets::pawn::m_pAimPunchServices);
 		if (aim_punch_service) {
 			Vec3_t punch3d = p->read<Vec3_t>(aim_punch_service + offsets::pawn::m_predictableBaseAngle);
-			Vec2_t new_punch{ punch3d.x, punch3d.y };
-
-			float delta_x = new_punch.x - this->aimPunch.x;
-			float delta_y = new_punch.y - this->aimPunch.y;
-
-			float expected = this->punch_delta_x.load();
-			while (!this->punch_delta_x.compare_exchange_weak(expected, expected + delta_x));
-
-			expected = this->punch_delta_y.load();
-			while (!this->punch_delta_y.compare_exchange_weak(expected, expected + delta_y));
-
-			this->aimPunch = new_punch;
+			this->aimPunch = { punch3d.x, punch3d.y };
 		}
 	}
 

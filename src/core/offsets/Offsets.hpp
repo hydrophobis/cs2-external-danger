@@ -1,5 +1,7 @@
 namespace offsets
 {
+	constexpr int dumpedBuildNumber = 14174;
+
 	// client.dll
 	inline DWORD entityList;
 	inline DWORD viewMatrix;

@@ -39,3 +39,7 @@ using namespace al;
 using namespace std::chrono_literals;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
+
+namespace app {
+	inline std::atomic<bool> running{ true };
+}

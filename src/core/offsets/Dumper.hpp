@@ -25,7 +25,7 @@ private:
     bool InitImpl();
 private:
     std::vector<WORD> StrSigToArray(const std::string& sig);
-    DWORD64 Scan(const std::string sig, ProcessModule module);
+    DWORD64 Scan(const std::string sig, ProcessModule module, int disp_offset = 3, int inst_length = 7);
     void GetNextArray(std::vector<short>& next, const std::vector<WORD>& signature);
     std::vector<DWORD64> ScanMemory(const std::string& sig, DWORD64 start, DWORD64 end, int number = 1);
     void ScanBlock(byte* buffer, const std::vector<short>& next, const std::vector<WORD>& signature, DWORD64 start, DWORD size, std::vector<DWORD64>& result);

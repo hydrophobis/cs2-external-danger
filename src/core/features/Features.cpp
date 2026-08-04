@@ -5,12 +5,17 @@ void Features::Run() {
     if (first_run) {
         LOGF(INFO, "P2C Features are now running!");
         Aimbot::Init(); // Initialize mouse-based aimbot thread
+        RCS::Init();
         first_run = false;
     }
-    
+
     Triggerbot::Run();
     AntiFlash::Run();
-    RCS::Run();
+}
+
+void Features::Shutdown() {
+    Aimbot::Shutdown();
+    RCS::Shutdown();
 }
 
 void Features::DrawOverlays() {

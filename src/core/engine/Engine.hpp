@@ -11,6 +11,7 @@ public:
     Engine& operator=(Engine&&)      = delete;
 
    static bool Init();
+   static void Shutdown();
    static ProcessModule GetClient();
    static ProcessModule GetEngine();
    static std::shared_ptr<pProcess> GetProcess(); // Refactor this so its easier to access
@@ -24,9 +25,11 @@ private:
     }
 
     bool InitImpl();
+    void ShutdownImpl();
 
     bool AwaitProcess();
     bool AwaitModules();
+    void CheckGameBuild();
 
     void Thread();
 
@@ -34,4 +37,5 @@ private:
     std::shared_ptr<pProcess> process;
     ProcessModule client;
     ProcessModule engine;
+    std::thread thread_;
 };

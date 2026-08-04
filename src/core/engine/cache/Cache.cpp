@@ -124,7 +124,7 @@ bool Cache::RefreshImpl() {
         std::lock_guard<std::mutex> lock(mtx);
         players = std::move(scan);
 
-        duration = duration_cast<std::chrono::milliseconds>(last - now);
+        duration = duration_cast<std::chrono::milliseconds>(now - last);
         last = now;
     }
 
