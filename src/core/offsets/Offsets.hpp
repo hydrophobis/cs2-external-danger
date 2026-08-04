@@ -26,31 +26,31 @@ namespace offsets
 		constexpr std::ptrdiff_t m_vOldOrigin = 0x13B8; // Vector
 		constexpr std::ptrdiff_t m_iHealth = 0x34C; // int32
 		constexpr std::ptrdiff_t m_iTeamNum = 0x3E7; // uint8
-		constexpr std::ptrdiff_t m_bIsScoped = 0x1C70; // bool
-		constexpr std::ptrdiff_t m_ArmorValue = 0x1C9C; // int32
-		constexpr std::ptrdiff_t m_bIsDefusing = 0x1C72; // bool
+		constexpr std::ptrdiff_t m_bIsScoped = 0x1C78; // bool
+		constexpr std::ptrdiff_t m_ArmorValue = 0x1CA4; // int32
+		constexpr std::ptrdiff_t m_bIsDefusing = 0x1C7A; // bool
 		constexpr std::ptrdiff_t m_vecAbsVelocity = 0x3F8; // Vector
 
 		constexpr std::ptrdiff_t m_pGameSceneNode = 0x330; // CGameSceneNode*
 		
-		constexpr std::ptrdiff_t m_entitySpottedState = 0x11B0; // EntitySpottedState_t
+		constexpr std::ptrdiff_t m_entitySpottedState = 0x1C60; // EntitySpottedState_t
 		constexpr std::ptrdiff_t m_bSpottedByMask = 0xC; // uint32[2] - EntitySpottedState_t
 		
 		constexpr std::ptrdiff_t m_flFlashOverlayAlpha = 0x141C;
-		constexpr std::ptrdiff_t m_flFlashMaxAlpha = 0x1420;
-		constexpr std::ptrdiff_t m_flFlashDuration = 0x1424;
+		constexpr std::ptrdiff_t m_flFlashMaxAlpha = 0x1424;
+		constexpr std::ptrdiff_t m_flFlashDuration = 0x1428;
 		
 		constexpr std::ptrdiff_t m_aimPunchAngle = 0x177C;
 		constexpr std::ptrdiff_t m_aimPunchAngleVel = 0x1788;
 		constexpr std::ptrdiff_t m_aimPunchCache = 0x1794;
-		constexpr std::ptrdiff_t m_iShotsFired = 0x1C84;
+		constexpr std::ptrdiff_t m_iShotsFired = 0x1C8C;
 		
 		constexpr std::ptrdiff_t m_pAimPunchServices = 0x14B8;
 		constexpr std::ptrdiff_t m_predictableBaseAngle = 0x50;
 		constexpr std::ptrdiff_t m_unpredictableBaseAngle = 0xA4;
 		
-		constexpr std::ptrdiff_t m_angEyeAngles = 0x1540;
-		constexpr std::ptrdiff_t m_iIDEntIndex = 0x344C;
+		constexpr std::ptrdiff_t m_angEyeAngles = 0x3350;
+		constexpr std::ptrdiff_t m_iIDEntIndex = 0x342C;
 		
 		constexpr std::ptrdiff_t m_pWeaponServices = 0x1208; // CPlayer_WeaponServices*
 		constexpr std::ptrdiff_t m_hActiveWeapon = 0x60; // CHandle<C_BasePlayerWeapon> - CPlayer_WeaponServices

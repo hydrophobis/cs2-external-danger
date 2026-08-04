@@ -25,10 +25,8 @@ void RCS::Run() {
     static std::chrono::steady_clock::time_point lastFrame{};
     static bool haveDt = false;
 
-    static Vec2_t last_punch{ 0.f, 0.f };
-    static Vec2_t target{ 0.f, 0.f };
     static Vec2_t applied{ 0.f, 0.f };
-    static int32_t prev_shots = 0;
+    static float remX = 0.f, remY = 0.f;
 
     auto now = std::chrono::steady_clock::now();
     float dt = 0.016f;
@@ -40,10 +38,9 @@ void RCS::Run() {
     haveDt = true;
 
     auto reset_state = [&] {
-        last_punch = { 0.f, 0.f };
-        target = { 0.f, 0.f };
         applied = { 0.f, 0.f };
-        prev_shots = 0;
+        remX = 0.f;
+        remY = 0.f;
     };
 
     if (first_run) {
@@ -81,7 +78,7 @@ void RCS::Run() {
     }
 
     int32_t shots_fired = process->read<int32_t>(local_pawn + offsets::pawn::m_iShotsFired);
-    if (shots_fired < 3) {
+    if (shots_fired < 1) {
         reset_state();
         return;
     }
@@ -95,27 +92,9 @@ void RCS::Run() {
     Vec3_t punch3d = process->read<Vec3_t>(aim_punch_service + offsets::pawn::m_predictableBaseAngle);
     Vec2_t cur{ punch3d.x, punch3d.y };
 
-    if (prev_shots < 3) {
-        prev_shots = shots_fired;
-        last_punch = cur;
-        target = { 0.f, 0.f };
-        applied = { 0.f, 0.f };
-        return;
-    }
+    Vec2_t target{ cur.x * cfg::rcs::vertical, cur.y * cfg::rcs::horizontal };
 
-    float cur_mag  = std::sqrt(cur.x * cur.x + cur.y * cur.y);
-    float last_mag = std::sqrt(last_punch.x * last_punch.x + last_punch.y * last_punch.y);
-    if (last_mag > 1.0f && cur_mag < last_mag - 1.0f) {
-        reset_state();
-        return;
-    }
-
-    target.x += (cur.x - last_punch.x) * cfg::rcs::vertical;
-    target.y += (cur.y - last_punch.y) * cfg::rcs::horizontal;
-    last_punch = cur;
-    prev_shots = shots_fired;
-
-    float smoothing = std::clamp(cfg::rcs::smooth, 0.f, 1.f);
+    float smoothing = std::clamp(cfg::rcs::smooth, 0.f, 5.f);
     float tau = smoothing * 0.05f;
     float a = (tau <= 0.0001f) ? 1.0f
              : std::clamp(1.0f - std::exp(-dt / tau), 0.f, 1.f);
@@ -126,8 +105,12 @@ void RCS::Run() {
     applied.y += step.y;
 
     constexpr float scale = 50.0f;
-    LONG moveX = static_cast<LONG>(-step.y * scale);
-    LONG moveY = static_cast<LONG>(-step.x * scale);
+    float fmx = step.y * scale + remX;
+    float fmy = -step.x * scale + remY;
+    LONG moveX = static_cast<LONG>(std::lroundf(fmx));
+    LONG moveY = static_cast<LONG>(std::lroundf(fmy));
+    remX = fmx - static_cast<float>(moveX);
+    remY = fmy - static_cast<float>(moveY);
 
     if (moveX != 0 || moveY != 0) {
         if (NtUserSendInput) {
