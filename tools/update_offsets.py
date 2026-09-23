@@ -5,7 +5,9 @@ import urllib.request
 
 CLIENT_DLL_URL = "https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/client_dll.json"
 INFO_URL = "https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/info.json"
+OFFSETS_URL = "https://raw.githubusercontent.com/a2x/cs2-dumper/main/output/offsets.json"
 OFFSETS_PATH = "src/core/offsets/Offsets.hpp"
+DUMPER_PATH = "src/core/offsets/Dumper.cpp"
 
 FIELD_MAP = {
     ("controller", "m_iPing"): "CCSPlayerController",
@@ -60,6 +62,12 @@ def fetch_build_number():
     with urllib.request.urlopen(INFO_URL, timeout=15) as resp:
         data = json.loads(resp.read().decode("utf-8"))
     return data["build_number"]
+
+
+def fetch_view_angles_offset():
+    with urllib.request.urlopen(OFFSETS_URL, timeout=15) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
+    return data["client.dll"]["dwViewAngles"]
 
 
 def resolve_offset(classes, class_name, field_name):
@@ -140,10 +148,36 @@ def update_offsets_file(classes, build_number):
     return changed, unresolved, build_changed
 
 
+def update_view_angles_file(view_angles_offset):
+    with open(DUMPER_PATH, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    pattern = re.compile(
+        r"(offsets::dwViewAngles\s*=\s*)0x([0-9A-Fa-f]+)(\s*;)"
+    )
+    match = pattern.search(content)
+    if match is None:
+        raise RuntimeError("Could not find hard-coded dwViewAngles assignment")
+
+    old_value = int(match.group(2), 16)
+    if old_value == view_angles_offset:
+        return None
+
+    content = pattern.sub(
+        rf"\g<1>0x{view_angles_offset:X}\g<3>", content, count=1
+    )
+    with open(DUMPER_PATH, "w", encoding="utf-8") as f:
+        f.write(content)
+
+    return old_value, view_angles_offset
+
+
 def main():
     classes = fetch_classes()
     build_number = fetch_build_number()
+    view_angles_offset = fetch_view_angles_offset()
     changed, unresolved, build_changed = update_offsets_file(classes, build_number)
+    view_angles_changed = update_view_angles_file(view_angles_offset)
 
     if build_changed:
         print(f"Build number {build_changed[0]} -> {build_changed[1]}")
@@ -156,6 +190,12 @@ def main():
             print(f"  {namespace}::{field_name}  0x{old_value:X} -> 0x{new_value:X}")
     else:
         print("No offsets needed updating.")
+
+    if view_angles_changed:
+        old_value, new_value = view_angles_changed
+        print(f"Updated dwViewAngles: 0x{old_value:X} -> 0x{new_value:X}")
+    else:
+        print(f"dwViewAngles unchanged (0x{view_angles_offset:X}).")
 
     if unresolved:
         print(f"Could not resolve {len(unresolved)} mapped field(s):")
