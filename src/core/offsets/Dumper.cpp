@@ -70,7 +70,7 @@ bool Dumper::InitImpl() {
     LOGF(VERBOSE, "Found 'weaponC4 carrier' offset at 0x{:X}", offsets::weaponC4);
 
     // dwViewAngles - hardcoded from dumper
-    offsets::dwViewAngles = 0x23B8C68;
+    offsets::dwViewAngles = 0x2571108;
     LOGF(VERBOSE, "Set 'dwViewAngles' offset at 0x{:X}", offsets::dwViewAngles);
 
 #if 0
